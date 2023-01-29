@@ -1,0 +1,7 @@
+
+flask
+gunicorn
+selenium
+########
+requests
+pyperclip
