@@ -4,4 +4,4 @@ gunicorn
 selenium
 ########
 requests
-pyperclip
+pybit

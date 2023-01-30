@@ -13,14 +13,20 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 from flask import Flask, request, jsonify
+# from pybit.perpetual import HTTP
+
 
 ####################### Environment Variables #######################
-airtable_api_key = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf02de7231d1e3f48c6d11ad'
 trading_view_email = "pierre.maw@gmail.com"
 trading_view_password = "aKoZgT9UTN9mRiZ2xpiM"
 
+airtable_api_key = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf02de7231d1e3f48c6d11ad'
 airtable_base_id = 'appkfyJCQlrzAluvw'
 airtable_table_name = 'tbl6MlOcqL99B445n'
+
+bybit_futures_balance_api_key = "X42FFGpgS4hdgKy3Qv"
+bybit_futures_balance_api_secret = "iV9MczHBwik1B5L7z3WB3cCKQSe7S4VTgeq7"
+
 
 remote_address = 'http://5.161.52.144'
 
@@ -65,7 +71,6 @@ def selenium_trading(asset_name):
             trading_view_chart_page = True
             break
 
-        
     symbol_search_visible = False 
     symbol_searched_for = False
     while not symbol_search_visible and not symbol_searched_for:
@@ -109,18 +114,16 @@ def selenium_trading(asset_name):
     trading_view_chart_image_url = driver.current_url
     image_source_url = wait.until(EC.element_to_be_clickable((By.XPATH, "//img[@alt='TradingView Chart']"))).get_attribute("src")
     
-    chart_capture_done = True
-
     driver.close()
     driver.quit()
 
     return trading_view_chart_image_url, image_source_url
 
 
-def add_data(data, record_id):
+def add_data(api_url, data, record_id):
     """Add scores to the Airtable."""
     
-    api_url = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tbl6MlOcqL99B445n/'
+    
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {airtable_api_key}'
@@ -178,9 +181,11 @@ def webhook_airtable():
         },
     ]
     }
-    airtable_response = add_data(data, record_id)
 
-    if airtable_response:
+    api_url = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tbl6MlOcqL99B445n/'
+    api_response = add_data(api_url, data, record_id)
+
+    if api_response:
         return {
             "code": "success",
             "message": "Airtable record updated successfully"
@@ -189,8 +194,61 @@ def webhook_airtable():
         return {
             "code": "error",
             "message": "Airtable record update failed",
-            "airtable response": f'{airtable_response}'
+            "airtable response": f'{api_response}'
         }
+
+# @app.route('/bybit_balance', methods=['POST'])
+# def bybit_balance():
+
+#     data = json.loads(request.data)
+#     if data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
+#         return {
+#             "code": "error",
+#             "message": "Invalid passphrase"
+#         }
+#     record_id = data['record_id']
+#     asset_name = data['asset']
+#     request_type = data['request_type']
+    
+#     session = HTTP(
+#     endpoint = 'https://api.bybit.com/',
+#     api_key = config.API_KEY,
+#     api_secret = config.API_SECRET
+#     )
+    
+#     bybit_futures_balance = session.get_wallet_balance(coin="USDT")
+
+#     if request_type == 'balance_before_trade':
+#         balance_field = 'Balance Before Trade'
+#     elif request_type == 'balance_after_trade':
+#         balance_field = 'Balance After Trade'
+    
+#     data = {"records": 
+#     [
+#         {"id": record_id,
+#             "fields": {
+#             f"{balance_field}": bybit_futures_balance['result']['balances'][0]['total'],
+#             }
+#         },
+#     ]
+#     }
+
+#     api_url = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tbl6MlOcqL99B445n/'
+#     api_response = add_data(api_url, data, record_id)
+
+#     if api_response:
+#         return {
+#             "code": "success",
+#             "message": "Airtable record updated successfully"
+#         }
+#     else:
+#         return {
+#             "code": "error",
+#             "message": "Airtable record update failed",
+#             "airtable response": f'{api_response}'
+#         }
+
+
 
 @app.route('/cache-me')
 def cache():
