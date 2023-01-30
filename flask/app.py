@@ -47,74 +47,72 @@ def selenium_home():
     return title
 
 def selenium_trading(asset_name):
+
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument('--start-fullscreen')
     chrome_options.add_argument('--start-maximized')
 
     driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
     
-    try:
-        driver.get('https://www.tradingview.com/#signin')
-        wait=WebDriverWait(driver, timeout=10)
-        wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Email']"))).click()
-        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='username']"))).send_keys(trading_view_email)
-        driver.find_element(By.XPATH, "//input[@name='password']").send_keys(f"{trading_view_password}" + Keys.RETURN)
-        # wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='password']"))).send_keys(trading_view_password)
-        # wait.until(EC.element_to_be_clickable((By.XPATH, "//button[.//span[contains(., 'Sign in')]]"))).click()
-        
-        #wait for tradingview homepage to load
-        time.sleep(5)
-        # navigate to the tradingview chart page
-        driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
-        time.sleep(5)
-        # We need to ensure that we are on the correct page for a given asset
-        # We can do this by inputing the asset name using key strokes. 
+    driver.get('https://www.tradingview.com/#signin')
+    wait=WebDriverWait(driver, timeout=10)
+    wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Email']"))).click()
+    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='username']"))).send_keys(trading_view_email)
+    driver.find_element(By.XPATH, "//input[@name='password']").send_keys(f"{trading_view_password}" + Keys.RETURN)
+    
+    # Wait for TradingView
+    time.sleep(5)
+    # navigate to the TradingView chart page
+    driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
+    time.sleep(5)
 
-        actions = ActionChains(driver)
-        actions.send_keys(Keys.ESCAPE).perform()
-        time.sleep(2)
-        actions.send_keys("@")
-        actions.send_keys(Keys.BACKSPACE)
-        actions.send_keys(asset_name)
-        actions.perform()
-        time.sleep(2)
-        actions.send_keys(Keys.ARROW_DOWN)
-        actions.send_keys(Keys.ENTER)
-        actions.perform()
-        time.sleep(8)
-        # Take a snapshot 
-        wait = WebDriverWait(driver, 40)
-        wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@id='header-toolbar-screenshot' and @data-role='button']")))
-        ######################################################################### seems to be working
-        actions.key_down(Keys.ALT).key_down('s').key_up(Keys.ALT).key_up('s').perform()
-        # wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@title='Take a snapshot' and @data-role='button']"))).click()
-        time.sleep(5)
-        
-        # time.sleep(1)
-        driver.execute_script("window.open('');")
+    # Go to the asset page on TradingView
+    actions = ActionChains(driver)
+    actions.send_keys(Keys.ESCAPE).perform()
+    time.sleep(2)
+    actions.send_keys("@")
+    actions.send_keys(Keys.BACKSPACE)
+    actions.send_keys(asset_name)
+    actions.perform()
+    time.sleep(2)
+    actions.send_keys(Keys.ARROW_DOWN)
+    actions.send_keys(Keys.ENTER)
+    actions.perform()
+    time.sleep(7) ###############
+    # Take a snapshot 
+    wait = WebDriverWait(driver, 40)
+    wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@id='header-toolbar-screenshot' and @data-role='button']")))
+    ########################################## experiment
+    time.sleep(1)
+    ######################################################################### seems to be working
+    actions.key_down(Keys.ALT).key_down('s').key_up(Keys.ALT).key_up('s').perform()
+    time.sleep(5)
 
-        trading_view_chart_image_url = 'https://www.tradingview.com/x/iUcOPe96/'
-        
-        time.sleep(2)
-        driver.switch_to.window(driver.window_handles[1])
-        time.sleep(2)
-        driver.get(trading_view_chart_image_url)
-        image_source_url = wait.until(EC.element_to_be_clickable((By.XPATH, "//img[@alt='TradingView Chart']"))).get_attribute("src")
-        
-        trading_view_chart_image_url = driver.current_url()
+    driver.execute_script("window.open('');")
+    driver.switch_to.window(driver.window_handles[-1])
+    driver.get('https://www.google.com')
+    time.sleep(3)
+    wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='q']"))).click()
+    
+    actions.key_down(Keys.CONTROL)
+    actions.send_keys('v')
+    actions.key_up(Keys.CONTROL)
+    actions.send_keys(Keys.ENTER)
+    actions.perform()
+    time.sleep(3)
 
-        driver.close()
-        driver.quit()
+    clipboard_value = driver.find_element(By.XPATH, "//input[@name='q']").get_attribute("value")
 
-        return trading_view_chart_image_url, image_source_url
-
-    except Exception as e:
-        print (e)
-
+    trading_view_chart_image_url = clipboard_value
+    
+    time.sleep(1)
+    driver.get(trading_view_chart_image_url)
+    image_source_url = wait.until(EC.element_to_be_clickable((By.XPATH, "//img[@alt='TradingView Chart']"))).get_attribute("src")
 
     driver.close()
     driver.quit()
+
     return trading_view_chart_image_url, image_source_url
+
 
 def add_data(data, record_id):
     """Add scores to the Airtable."""
@@ -153,39 +151,32 @@ def webhook_airtable():
         }
     record_id = data['record_id']
     asset_name = data['asset']
+    request_type = data['request_type']
     time_stamp = datetime.today().strftime('%Y-%m-%d')
 
-    # call the take_screenshot function
-    screenshot = selenium_trading(asset_name)
+    # call the selenium webdriver function
+    tradingview_chart_data = selenium_trading(asset_name)
     
-    print(screenshot)
+    if request_type == 'chart 1':
+        chart_image_field = 'Chart 1'
+        chart_image_reference_field = 'Chart 1 Reference'
+    elif request_type == 'chart 2':
+        chart_image_field = 'Chart 2'
+        chart_image_reference_field = 'Chart 2 Reference'
 
     data = {"records": 
     [
         {"id": record_id,
             "fields": {
-            "Chart Link": f"{screenshot}", #screenshot[0]
-            "Chart": [{
-                "url": "test", #screenshot[1]
-                "filename": f'[{time_stamp}] {asset_name}.png'
+            f"{chart_image_reference_field}": tradingview_chart_data[0],
+            f"{chart_image_field}": [{
+                "url": tradingview_chart_data[1],
+                "filename": f"[{time_stamp}] {asset_name}.png"
                 }]
             }
         },
     ]
     }
-    # data = {"records": 
-    # [
-    #     {"id": record_id,
-    #         "fields": {
-    #         "Chart Link": screenshot[0],
-    #         "Chart": [{
-    #             "url": screenshot[1],
-    #             "filename": f'[{time_stamp}] {asset_name}.png'
-    #             }]
-    #         }
-    #     },
-    # ]
-    # }
     airtable_response = add_data(data, record_id)
 
     if airtable_response:
