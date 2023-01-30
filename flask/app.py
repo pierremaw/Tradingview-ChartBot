@@ -63,49 +63,50 @@ def selenium_trading(asset_name):
     time.sleep(5)
     # navigate to the TradingView chart page
     driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
-    time.sleep(5)
+    time.sleep(8)
 
-    # Go to the asset page on TradingView
-    actions = ActionChains(driver)
-    actions.send_keys(Keys.ESCAPE).perform()
-    time.sleep(2)
-    actions.send_keys("@")
-    actions.send_keys(Keys.BACKSPACE)
-    actions.send_keys(asset_name)
-    actions.perform()
-    time.sleep(2)
-    actions.send_keys(Keys.ARROW_DOWN)
-    actions.send_keys(Keys.ENTER)
-    actions.perform()
-    time.sleep(7) ###############
+     ####################################
+    # Click the symbol search button
+    symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")
+    driver.execute_script("arguments[0].click();", symbol_search)
+    time.sleep(5)
+    wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.BACKSPACE)
+    time.sleep(1)
+    wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(asset_name)
+    time.sleep(1)
+    wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.ARROW_DOWN)
+    
+    first_row_item = driver.find_element(By.XPATH, "//div[contains(@class, 'listContainer')]/div[1]/div[1]")
+    driver.execute_script("arguments[0].click();", first_row_item)
+    
+    time.sleep(6)
+
     # Take a snapshot 
-    wait = WebDriverWait(driver, 40)
-    wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@id='header-toolbar-screenshot' and @data-role='button']")))
-    ########################################## experiment
-    time.sleep(1)
-    ######################################################################### seems to be working
-    actions.key_down(Keys.ALT).key_down('s').key_up(Keys.ALT).key_up('s').perform()
+    take_a_snapshot =  driver.find_elements(By.XPATH, "//div[@title='Take a snapshot']")
+    open_image_in_new_tab = driver.find_elements(By.XPATH, "//span[text()='Open image in new tab']")
+    new_tab_opened = False
+    
+    while not new_tab_opened:
+        
+        for element in take_a_snapshot:
+
+            driver.execute_script("arguments[0].click();", element)
+            time.sleep(1)
+            open_image_in_new_tab = driver.find_element(By.XPATH, "//span[text()='Open image in new tab']")
+            if open_image_in_new_tab != []:
+                open_image_in_new_tab = driver.find_element(By.XPATH, "//span[text()='Open image in new tab']")
+                driver.execute_script("arguments[0].click();", open_image_in_new_tab)
+                new_tab_opened = True
+                break
+            
+
+
+
+    # open_image_in_new_tab = driver.find_element(By.XPATH, "//span[text()='Open image in new tab']")
+    # driver.execute_script("arguments[0].click();", open_image_in_new_tab)
     time.sleep(5)
-
-    driver.execute_script("window.open('');")
     driver.switch_to.window(driver.window_handles[-1])
-    driver.get('https://www.google.com')
-    time.sleep(3)
-    wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='q']"))).click()
-    
-    actions.key_down(Keys.CONTROL)
-    actions.send_keys('v')
-    actions.key_up(Keys.CONTROL)
-    actions.send_keys(Keys.ENTER)
-    actions.perform()
-    time.sleep(3)
-
-    clipboard_value = driver.find_element(By.XPATH, "//input[@name='q']").get_attribute("value")
-
-    trading_view_chart_image_url = clipboard_value
-    
-    time.sleep(1)
-    driver.get(trading_view_chart_image_url)
+    trading_view_chart_image_url = driver.current_url
     image_source_url = wait.until(EC.element_to_be_clickable((By.XPATH, "//img[@alt='TradingView Chart']"))).get_attribute("src")
 
     driver.close()
