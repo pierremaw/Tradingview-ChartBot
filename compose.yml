@@ -26,4 +26,4 @@ services:
       interval: 10s
       timeout: 10s
       retries: 3
-    command: gunicorn -w 3 -t 99 -b 0.0.0.0:8000 app:app
+    command: gunicorn -w 3 -t 9999 -b 0.0.0.0:8000 app:app

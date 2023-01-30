@@ -61,32 +61,47 @@ def selenium_trading(asset_name):
     
     # Wait for TradingView
     time.sleep(5)
-    # navigate to the TradingView chart page
-    driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
-    time.sleep(8)
 
-     ####################################
-    # Click the symbol search button
-    symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")
-    driver.execute_script("arguments[0].click();", symbol_search)
-    time.sleep(5)
-    wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.BACKSPACE)
-    time.sleep(1)
-    wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(asset_name)
-    time.sleep(1)
-    wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.ARROW_DOWN)
-    
-    first_row_item = driver.find_element(By.XPATH, "//div[contains(@class, 'listContainer')]/div[1]/div[1]")
-    driver.execute_script("arguments[0].click();", first_row_item)
-    
-    time.sleep(6)
+    trading_view_chart_page = False
+    while not trading_view_chart_page:
+        driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
+        time.sleep(5)
+        symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")    
+        if symbol_search != []:
+            trading_view_chart_page = True
+            break
+
+    symbol_search_visible = False 
+    symbol_searched_for = False
+
+    while not symbol_search_visible and not symbol_searched_for:
+        symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")
+        driver.execute_script("arguments[0].click();", symbol_search)
+        time.sleep(3)
+        search_bar = driver.find_element(By.XPATH, "//input[@placeholder='Search']")
+        if search_bar != []:
+            symbol_search_visible = True
+            wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']")))
+            search_bar.clear()
+            time.sleep(1)
+            wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(asset_name)
+            time.sleep(1)
+            wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.ENTER)
+            # wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.ARROW_DOWN)
+            # first_row_item = driver.find_element(By.XPATH, "//div[contains(@class, 'listContainer')]/div[1]/div[1]")
+            # driver.execute_script("arguments[0].click();", first_row_item)
+            time.sleep(5)
+            take_a_snapshot =  driver.find_elements(By.XPATH, "//div[@title='Take a snapshot']")    
+
+            if take_a_snapshot != []:
+                symbol_searched_for = True
+
 
     # Take a snapshot 
-    take_a_snapshot =  driver.find_elements(By.XPATH, "//div[@title='Take a snapshot']")
-    open_image_in_new_tab = driver.find_elements(By.XPATH, "//span[text()='Open image in new tab']")
     new_tab_opened = False
-    
     while not new_tab_opened:
+        take_a_snapshot =  driver.find_elements(By.XPATH, "//div[@title='Take a snapshot']")
+        open_image_in_new_tab = driver.find_elements(By.XPATH, "//span[text()='Open image in new tab']")
         
         for element in take_a_snapshot:
 
@@ -98,9 +113,6 @@ def selenium_trading(asset_name):
                 driver.execute_script("arguments[0].click();", open_image_in_new_tab)
                 new_tab_opened = True
                 break
-            
-
-
 
     # open_image_in_new_tab = driver.find_element(By.XPATH, "//span[text()='Open image in new tab']")
     # driver.execute_script("arguments[0].click();", open_image_in_new_tab)
