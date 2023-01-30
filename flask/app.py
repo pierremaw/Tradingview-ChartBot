@@ -2,20 +2,15 @@
 import time
 from datetime import datetime
 import requests
-import pyperclip
 import json
 import config as config
 
 from selenium import webdriver
-from selenium.webdriver import ActionChains, Keys
-# from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver import Keys
 
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-
 
 from flask import Flask, request, jsonify
 
@@ -31,7 +26,6 @@ remote_address = 'http://5.161.52.144'
 
 ########## Flask App ######################
 app = Flask(__name__)
-
 ####################### Functions #######################
 
 def selenium_home():
@@ -63,7 +57,7 @@ def selenium_trading(asset_name):
     time.sleep(5)
 
     trading_view_chart_page = False
-    while not trading_view_chart_page:
+    while not trading_view_chart_page :
         driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
         time.sleep(5)
         symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")    
@@ -71,9 +65,9 @@ def selenium_trading(asset_name):
             trading_view_chart_page = True
             break
 
+        
     symbol_search_visible = False 
     symbol_searched_for = False
-
     while not symbol_search_visible and not symbol_searched_for:
         symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")
         driver.execute_script("arguments[0].click();", symbol_search)
@@ -87,15 +81,11 @@ def selenium_trading(asset_name):
             wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(asset_name)
             time.sleep(1)
             wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.ENTER)
-            # wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.ARROW_DOWN)
-            # first_row_item = driver.find_element(By.XPATH, "//div[contains(@class, 'listContainer')]/div[1]/div[1]")
-            # driver.execute_script("arguments[0].click();", first_row_item)
             time.sleep(5)
             take_a_snapshot =  driver.find_elements(By.XPATH, "//div[@title='Take a snapshot']")    
 
             if take_a_snapshot != []:
                 symbol_searched_for = True
-
 
     # Take a snapshot 
     new_tab_opened = False
@@ -114,12 +104,12 @@ def selenium_trading(asset_name):
                 new_tab_opened = True
                 break
 
-    # open_image_in_new_tab = driver.find_element(By.XPATH, "//span[text()='Open image in new tab']")
-    # driver.execute_script("arguments[0].click();", open_image_in_new_tab)
     time.sleep(5)
     driver.switch_to.window(driver.window_handles[-1])
     trading_view_chart_image_url = driver.current_url
     image_source_url = wait.until(EC.element_to_be_clickable((By.XPATH, "//img[@alt='TradingView Chart']"))).get_attribute("src")
+    
+    chart_capture_done = True
 
     driver.close()
     driver.quit()
@@ -139,9 +129,7 @@ def add_data(data, record_id):
     response = requests.patch(api_url, headers=headers, json=data)
     return True
 
-
 ####################### Flask Routes #######################
-
 
 @app.route('/')
 def hello():
