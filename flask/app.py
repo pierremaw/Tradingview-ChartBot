@@ -13,8 +13,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 from flask import Flask, request, jsonify
-# from pybit.perpetual import HTTP
 
+################# Bybit API Imports, Environment Variables and Functions  #################
+
+from pybit import HTTP
+
+bybit_api_key = "nkWOnzfGIJBpjwOKiX"
+bybit_secret_key = "W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16"
 
 ####################### Environment Variables #######################
 trading_view_email = "pierre.maw@gmail.com"
@@ -23,10 +28,6 @@ trading_view_password = "aKoZgT9UTN9mRiZ2xpiM"
 airtable_api_key = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf02de7231d1e3f48c6d11ad'
 airtable_base_id = 'appkfyJCQlrzAluvw'
 airtable_table_name = 'tbl6MlOcqL99B445n'
-
-bybit_futures_balance_api_key = "X42FFGpgS4hdgKy3Qv"
-bybit_futures_balance_api_secret = "iV9MczHBwik1B5L7z3WB3cCKQSe7S4VTgeq7"
-
 
 remote_address = 'http://5.161.52.144'
 
@@ -40,7 +41,6 @@ def selenium_home():
     driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
     
     driver.get('https://www.google.com')
-    driver.get('https://www.python.org')
     title = driver.title
     driver.close()
     driver.quit()
@@ -120,16 +120,15 @@ def selenium_trading(asset_name):
     return trading_view_chart_image_url, image_source_url
 
 
-def add_data(api_url, data, record_id):
-    """Add scores to the Airtable."""
-    
+def airtable_api_request(api_url, data):
+    """API request."""
     
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {airtable_api_key}'
         }
     
-    response = requests.patch(api_url, headers=headers, json=data)
+    requests.patch(api_url, headers=headers, json=data)
     return True
 
 ####################### Flask Routes #######################
@@ -147,43 +146,37 @@ def hello():
 @app.route('/webhook_airtable', methods=['POST'])
 def webhook_airtable():
 
-    data = json.loads(request.data)
-    if data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
+    webhook_data = json.loads(request.data)
+    if webhook_data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
         return {
             "code": "error",
             "message": "Invalid passphrase"
         }
-    record_id = data['record_id']
-    asset_name = data['asset']
-    request_type = data['request_type']
+    record_id = webhook_data['record_id']
+    asset_name = webhook_data['asset']
+    chart_request_type = webhook_data['request_type']
     time_stamp = datetime.today().strftime('%Y-%m-%d')
 
     # call the selenium webdriver function
     tradingview_chart_data = selenium_trading(asset_name)
-    
-    if request_type == 'chart 1':
-        chart_image_field = 'Chart 1'
-        chart_image_reference_field = 'Chart 1 Reference'
-    elif request_type == 'chart 2':
-        chart_image_field = 'Chart 2'
-        chart_image_reference_field = 'Chart 2 Reference'
 
     data = {"records": 
     [
         {"id": record_id,
             "fields": {
-            f"{chart_image_reference_field}": tradingview_chart_data[0],
-            f"{chart_image_field}": [{
+            f"{chart_request_type} Reference": tradingview_chart_data[0],
+            f"{chart_request_type}": [{
                 "url": tradingview_chart_data[1],
-                "filename": f"[{time_stamp}] {asset_name}.png"
+                "filename": f"[{time_stamp}] {asset_name} {chart_request_type}.png"
                 }]
             }
         },
     ]
     }
 
-    api_url = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tbl6MlOcqL99B445n/'
-    api_response = add_data(api_url, data, record_id)
+    airtable_table = 'tbl6MlOcqL99B445n' # Trading Viw Setups Table
+    api_url = f'https://api.airtable.com/v0/appkfyJCQlrzAluvw/{airtable_table}/'
+    api_response = airtable_api_request(api_url, data)
 
     if api_response:
         return {
@@ -197,58 +190,53 @@ def webhook_airtable():
             "airtable response": f'{api_response}'
         }
 
-# @app.route('/bybit_balance', methods=['POST'])
-# def bybit_balance():
+@app.route('/bybit_balance', methods=['POST'])
+def bybit_balance():
 
-#     data = json.loads(request.data)
-#     if data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
-#         return {
-#             "code": "error",
-#             "message": "Invalid passphrase"
-#         }
-#     record_id = data['record_id']
-#     asset_name = data['asset']
-#     request_type = data['request_type']
+    data = json.loads(request.data)
+    if data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
+        return {
+            "code": "error",
+            "message": "Invalid passphrase"
+        }
+    record_id = data['record_id']
+    balance_field = data['request_type']
+        
+    #Get Wallet Balance
+    session = HTTP(
+        endpoint = 'https://api.bybit.com/',
+        api_key = bybit_api_key,
+        api_secret = bybit_secret_key
+    )
+
+    balance_request = session.get_wallet_balance(coin="USDT")
+    balance = balance_request["result"]["USDT"]["wallet_balance"]
+
+    data = {"records": 
+    [
+        {"id": record_id,
+            "fields": {
+            f"{balance_field}": balance,
+            }
+        },
+    ]
+    }
     
-#     session = HTTP(
-#     endpoint = 'https://api.bybit.com/',
-#     api_key = config.API_KEY,
-#     api_secret = config.API_SECRET
-#     )
-    
-#     bybit_futures_balance = session.get_wallet_balance(coin="USDT")
+    airtable_table = 'tblsdUW4vxAB7molM' # Trading Journal Table
+    api_url = f'https://api.airtable.com/v0/appkfyJCQlrzAluvw/{airtable_table}/'
+    api_response = airtable_api_request(api_url, data)
 
-#     if request_type == 'balance_before_trade':
-#         balance_field = 'Balance Before Trade'
-#     elif request_type == 'balance_after_trade':
-#         balance_field = 'Balance After Trade'
-    
-#     data = {"records": 
-#     [
-#         {"id": record_id,
-#             "fields": {
-#             f"{balance_field}": bybit_futures_balance['result']['balances'][0]['total'],
-#             }
-#         },
-#     ]
-#     }
-
-#     api_url = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tbl6MlOcqL99B445n/'
-#     api_response = add_data(api_url, data, record_id)
-
-#     if api_response:
-#         return {
-#             "code": "success",
-#             "message": "Airtable record updated successfully"
-#         }
-#     else:
-#         return {
-#             "code": "error",
-#             "message": "Airtable record update failed",
-#             "airtable response": f'{api_response}'
-#         }
-
-
+    if api_response:
+        return {
+            "code": "success",
+            "message": "Airtable record updated successfully"
+        }
+    else:
+        return {
+            "code": "error",
+            "message": "Airtable record update failed",
+            "airtable response": f'{api_response}'
+        }
 
 @app.route('/cache-me')
 def cache():
