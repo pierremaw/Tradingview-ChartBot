@@ -1,5 +1,14 @@
 # Compose Sample Application
 
+This server side script assists automation processes in Airtable.
+
+When there is a TradingView alert, TradingView transmits info
+to Airtable. 
+
+This TradingView info is stored in the Airtable base named "Trading View Setups". Each TradingView alert has it's own record in the "Trading View Setups" base.
+
+When a new record is inserted into the "Trading View Setups" base, Airtable performs some automation scripts. One automation script transmits a JSON formatted webhook to a VPS (The VPS running this serverside script). 
+
 ## NGINX Reverse Proxy -> WSGI -> Python/Flask Backend
 
 Project structure:

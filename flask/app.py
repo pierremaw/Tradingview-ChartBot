@@ -1,10 +1,17 @@
-
+'''
+Packages
+'''
 import time
 from datetime import datetime
 import requests
 import json
 import config as config
+import os
 
+
+'''
+Selenium Imports
+'''
 from selenium import webdriver
 from selenium.webdriver import Keys
 
@@ -14,57 +21,64 @@ from selenium.webdriver.common.by import By
 
 from flask import Flask, request, jsonify
 
-################# Bybit API Imports, Environment Variables and Functions  #################
-
+'''
+Bybit API Imports, Environment Variables and Functions
+'''
 from pybit import HTTP
+os.environ['env_bybit_api_key'] = 'nkWOnzfGIJBpjwOKiX'
+os.environ['env_bybit_secret_key'] = 'W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16'
 
-bybit_api_key = "nkWOnzfGIJBpjwOKiX"
-bybit_secret_key = "W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16"
+'''
+Trading View Variables
+'''
+os.environ['env_trading_view_email'] = 'pierre.maw@gmail.com'
+os.environ['env_trading_view_password'] = 'aKoZgT9UTN9mRiZ2xpiM'
+os.environ['env_trading_view_sign_in_url'] = 'https://www.tradingview.com/#signin'
+os.environ['env_trading_view_chart_url'] = 'https://www.tradingview.com/chart/6l6q6Oh0'
 
-####################### Environment Variables #######################
-trading_view_email = "pierre.maw@gmail.com"
-trading_view_password = "aKoZgT9UTN9mRiZ2xpiM"
+'''
+Airtable Variables
+'''
+# Airtable API key
+os.environ['env_airtable_api_key'] = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf02de7231d1e3f48c6d11ad'
 
-airtable_api_key = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf02de7231d1e3f48c6d11ad'
-airtable_base_id = 'appkfyJCQlrzAluvw'
-airtable_table_name = 'tbl6MlOcqL99B445n'
+# Tables
+os.environ['env_airtable_trading_view_setups_table'] = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tbl6MlOcqL99B445n'
+os.environ['env_airtable_trading_journal_table'] = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tblsdUW4vxAB7molM'
 
-remote_address = 'http://5.161.52.144'
+'''
+VPS Variables
+'''
+os.environ['env_remote_address'] = 'http://5.161.52.144'
+
 
 ########## Flask App ######################
 app = Flask(__name__)
 ####################### Functions #######################
 
 def selenium_home():
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--start-maximized')
-    driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
-    
-    driver.get('https://www.google.com')
-    title = driver.title
-    driver.close()
-    driver.quit()
-    return title
+    pass
+    return 
 
 def selenium_trading(asset_name):
 
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--start-maximized')
 
-    driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
+    driver = webdriver.Remote(command_executor=f'{os.environ.get("env_remote_address")}:4444',options=chrome_options)
     
-    driver.get('https://www.tradingview.com/#signin')
+    driver.get(os.environ.get('env_trading_view_sign_in_url'))
     wait=WebDriverWait(driver, timeout=10)
     wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Email']"))).click()
-    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='username']"))).send_keys(trading_view_email)
-    driver.find_element(By.XPATH, "//input[@name='password']").send_keys(f"{trading_view_password}" + Keys.RETURN)
+    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='username']"))).send_keys(os.environ.get('env_trading_view_email'))
+    driver.find_element(By.XPATH, "//input[@name='password']").send_keys(f"{os.environ.get('env_trading_view_password')}" + Keys.RETURN)
     
     # Wait for TradingView
     time.sleep(5)
 
     trading_view_chart_page = False
     while not trading_view_chart_page :
-        driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
+        driver.get(os.environ.get('env_trading_view_chart_url'))
         time.sleep(5)
         symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")    
         if symbol_search != []:
@@ -119,13 +133,12 @@ def selenium_trading(asset_name):
 
     return trading_view_chart_image_url, image_source_url
 
-
 def airtable_api_request(api_url, data):
     """API request."""
     
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {airtable_api_key}'
+        'Authorization': f'Bearer {os.environ.get("env_airtable_api_key")}'
         }
     
     requests.patch(api_url, headers=headers, json=data)
@@ -174,8 +187,8 @@ def webhook_airtable():
     ]
     }
 
-    airtable_table = 'tbl6MlOcqL99B445n' # Trading Viw Setups Table
-    api_url = f'https://api.airtable.com/v0/appkfyJCQlrzAluvw/{airtable_table}/'
+    api_url = os.environ.get('env_airtable_trading_view_setups_table')
+
     api_response = airtable_api_request(api_url, data)
 
     if api_response:
@@ -205,8 +218,8 @@ def bybit_balance():
     #Get Wallet Balance
     session = HTTP(
         endpoint = 'https://api.bybit.com/',
-        api_key = bybit_api_key,
-        api_secret = bybit_secret_key
+        api_key = os.environ.get('env_bybit_api_key'),
+        api_secret = os.environ.get('env_bybit_secret_key')
     )
 
     balance_request = session.get_wallet_balance(coin="USDT")
@@ -222,8 +235,7 @@ def bybit_balance():
     ]
     }
     
-    airtable_table = 'tblsdUW4vxAB7molM' # Trading Journal Table
-    api_url = f'https://api.airtable.com/v0/appkfyJCQlrzAluvw/{airtable_table}/'
+    api_url = os.environ.get('env_airtable_trading_journal_table')
     api_response = airtable_api_request(api_url, data)
 
     if api_response:
