@@ -8,6 +8,11 @@ import json
 import config as config
 import os
 
+'''
+Environment Variables
+'''
+from dotenv import load_dotenv
+load_dotenv()
 
 '''
 Selenium Imports
@@ -21,35 +26,7 @@ from selenium.webdriver.common.by import By
 
 from flask import Flask, request, jsonify
 
-'''
-Bybit API Imports, Environment Variables and Functions
-'''
 from pybit import HTTP
-os.environ['env_bybit_api_key'] = 'nkWOnzfGIJBpjwOKiX'
-os.environ['env_bybit_secret_key'] = 'W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16'
-
-'''
-Trading View Variables
-'''
-os.environ['env_trading_view_email'] = 'pierre.maw@gmail.com'
-os.environ['env_trading_view_password'] = 'aKoZgT9UTN9mRiZ2xpiM'
-os.environ['env_trading_view_sign_in_url'] = 'https://www.tradingview.com/#signin'
-os.environ['env_trading_view_chart_url'] = 'https://www.tradingview.com/chart/6l6q6Oh0'
-
-'''
-Airtable Variables
-'''
-# Airtable API key
-os.environ['env_airtable_api_key'] = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf02de7231d1e3f48c6d11ad'
-
-# Tables
-os.environ['env_airtable_trading_view_setups_table'] = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tbl6MlOcqL99B445n'
-os.environ['env_airtable_trading_journal_table'] = 'https://api.airtable.com/v0/appkfyJCQlrzAluvw/tblsdUW4vxAB7molM'
-
-'''
-VPS Variables
-'''
-os.environ['env_remote_address'] = 'http://5.161.52.144'
 
 
 ########## Flask App ######################
@@ -65,20 +42,20 @@ def selenium_trading(asset_name):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--start-maximized')
 
-    driver = webdriver.Remote(command_executor=f'{os.environ.get("env_remote_address")}:4444',options=chrome_options)
+    driver = webdriver.Remote(command_executor=f"{os.environ.get('VPS_HTTP')}:4444",options=chrome_options)
     
-    driver.get(os.environ.get('env_trading_view_sign_in_url'))
+    driver.get(os.environ.get('TRADINGVIEW_SIGN_IN_HTTP'))
     wait=WebDriverWait(driver, timeout=10)
     wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Email']"))).click()
-    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='username']"))).send_keys(os.environ.get('env_trading_view_email'))
-    driver.find_element(By.XPATH, "//input[@name='password']").send_keys(f"{os.environ.get('env_trading_view_password')}" + Keys.RETURN)
+    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='username']"))).send_keys(os.environ.get('TRADINGVIEW_EMAIL'))
+    driver.find_element(By.XPATH, "//input[@name='password']").send_keys(f"{os.environ.get('TRADINGVIEW_PASSWORD')}" + Keys.RETURN)
     
     # Wait for TradingView
     time.sleep(5)
 
     trading_view_chart_page = False
     while not trading_view_chart_page :
-        driver.get(os.environ.get('env_trading_view_chart_url'))
+        driver.get(os.environ.get('TRADINGVIEW_CHART_HTTP'))
         time.sleep(5)
         symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")    
         if symbol_search != []:
@@ -134,11 +111,11 @@ def selenium_trading(asset_name):
     return trading_view_chart_image_url, image_source_url
 
 def airtable_api_request(api_url, data):
-    """API request."""
+    '''API request'''
     
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {os.environ.get("env_airtable_api_key")}'
+        'Authorization': f"Bearer {os.environ.get('AIRTABLE_API_KEY')}"
         }
     
     requests.patch(api_url, headers=headers, json=data)
@@ -160,7 +137,7 @@ def hello():
 def webhook_airtable():
 
     webhook_data = json.loads(request.data)
-    if webhook_data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
+    if webhook_data['passphrase'] != os.environ.get('PASSPHRASE_WEBHOOK_AIRTABLE_TRADINGVIEW'):
         return {
             "code": "error",
             "message": "Invalid passphrase"
@@ -187,7 +164,7 @@ def webhook_airtable():
     ]
     }
 
-    api_url = os.environ.get('env_airtable_trading_view_setups_table')
+    api_url = os.environ.get('AIRTABLE_SETUPS_TABLE_HTTP')
 
     api_response = airtable_api_request(api_url, data)
 
@@ -207,7 +184,7 @@ def webhook_airtable():
 def bybit_balance():
 
     data = json.loads(request.data)
-    if data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
+    if data['passphrase'] != os.environ.get('PASSPHRASE_WEBHOOK_AIRTABLE_BYBIT_DERIVS'):
         return {
             "code": "error",
             "message": "Invalid passphrase"
@@ -218,8 +195,8 @@ def bybit_balance():
     #Get Wallet Balance
     session = HTTP(
         endpoint = 'https://api.bybit.com/',
-        api_key = os.environ.get('env_bybit_api_key'),
-        api_secret = os.environ.get('env_bybit_secret_key')
+        api_key = os.environ.get('BYBIT_API_KEY'),
+        api_secret = os.environ.get('BYBIT_SECRET_KEY')
     )
 
     balance_request = session.get_wallet_balance(coin="USDT")
@@ -235,7 +212,7 @@ def bybit_balance():
     ]
     }
     
-    api_url = os.environ.get('env_airtable_trading_journal_table')
+    api_url = os.environ.get('AIRTABLE_JOURNAL_TABLE_HTTP')
     api_response = airtable_api_request(api_url, data)
 
     if api_response:
