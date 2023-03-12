@@ -4,5 +4,3 @@ gunicorn
 selenium
 requests
 pybit
-os
-python-dotenv
