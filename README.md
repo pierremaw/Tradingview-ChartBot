@@ -1,13 +1,15 @@
 # Compose Sample Application
 
-This server side script assists automation processes in Airtable.
+This server side script performs some helper functions for automation processes in Airtable.
 
-When there is a TradingView alert, TradingView transmits info
-to Airtable. 
+When there is a TradingView alert, TradingView transmits info to Airtable. 
 
-This TradingView info is stored in the Airtable base named "Trading View Setups". Each TradingView alert has it's own record in the "Trading View Setups" base.
+This TradingView info is stored in the Airtable base named "Trading View Setups". 
+Each TradingView alert has it's own record in the "Trading View Setups" base.
 
 When a new record is inserted into the "Trading View Setups" base, Airtable performs some automation scripts. One automation script transmits a JSON formatted webhook to a VPS (The VPS running this serverside script). 
+
+The source repo used was awesome-compose/nginx-wsgi-flask.
 
 ## NGINX Reverse Proxy -> WSGI -> Python/Flask Backend
 

@@ -1,4 +1,10 @@
 services:
+  selenium:
+    image: selenium/standalone-chrome:4.8.1-20230306
+    shm_size: 2g
+    ports:
+      - "4444:4444"
+      - "5900:5900"
   nginx-proxy:
     build: ./nginx
     restart: always

@@ -4,3 +4,4 @@ gunicorn
 selenium
 requests
 pybit
+fake_useragent

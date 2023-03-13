@@ -6,7 +6,11 @@ import json
 import config as config
 
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Keys
+from fake_useragent import UserAgent
+
+
 
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -37,7 +41,11 @@ app = Flask(__name__)
 
 def selenium_home():
     chrome_options = webdriver.ChromeOptions()
+    ua = UserAgent()
+    userAgent = ua.random
     chrome_options.add_argument('--start-maximized')
+    chrome_options.add_argument(f'user-agent={userAgent}')
+
     driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
     
     driver.get('https://www.google.com')
@@ -54,9 +62,12 @@ def selenium_trading(asset_name):
     driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
     
     driver.get('https://www.tradingview.com/#signin')
+    time.sleep(1)
     wait=WebDriverWait(driver, timeout=10)
     wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Email']"))).click()
+    time.sleep(1)
     wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='username']"))).send_keys(trading_view_email)
+    time.sleep(1)
     driver.find_element(By.XPATH, "//input[@name='password']").send_keys(f"{trading_view_password}" + Keys.RETURN)
     
     # Wait for TradingView
