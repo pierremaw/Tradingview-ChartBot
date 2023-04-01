@@ -120,7 +120,6 @@ def selenium_trading(asset_name):
         open_image_in_new_tab = driver.find_elements(By.XPATH, "//span[text()='Open image in new tab']")
         
         for element in take_a_snapshot:
-
             driver.execute_script("arguments[0].click();", element)
             time.sleep(1)
             open_image_in_new_tab = driver.find_element(By.XPATH, "//span[text()='Open image in new tab']")
@@ -129,7 +128,8 @@ def selenium_trading(asset_name):
                 driver.execute_script("arguments[0].click();", open_image_in_new_tab)
                 new_tab_opened = True
                 break
- 
+    
+    '''GET IMAGE URL AND SHUT DRIVER'''
     time.sleep(5)
     driver.switch_to.window(driver.window_handles[-1])
     trading_view_chart_image_url = driver.current_url
