@@ -1,31 +1,39 @@
-
+'''
+IMPORTS
+'''
 import time
 from datetime import datetime
 import requests
 import json
 import config as config
 
+'''
+SELENIUM
+'''
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Keys
 from fake_useragent import UserAgent
 
-
-
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+'''
+FLASK
+'''
 from flask import Flask, request, jsonify
 
-################# Bybit API Imports, Environment Variables and Functions  #################
-
+'''
+BYBIT
+'''
 from pybit import HTTP
-
 bybit_api_key = "nkWOnzfGIJBpjwOKiX"
 bybit_secret_key = "W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16"
 
-####################### Environment Variables #######################
+'''
+TRADINGVIEW
+'''
 trading_view_email = "pierre.maw@gmail.com"
 trading_view_password = "aKoZgT9UTN9mRiZ2xpiM"
 
@@ -33,34 +41,35 @@ airtable_api_key = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf
 airtable_base_id = 'appkfyJCQlrzAluvw'
 airtable_table_name = 'tbl6MlOcqL99B445n'
 
+'''
+VPS ADDRESS
+'''
 remote_address = 'http://5.161.52.144'
 
-########## Flask App ######################
+'''
+FLASK APP
+'''
 app = Flask(__name__)
-####################### Functions #######################
 
-def selenium_home():
-    chrome_options = webdriver.ChromeOptions()
-    ua = UserAgent()
-    userAgent = ua.random
-    chrome_options.add_argument('--start-maximized')
-    chrome_options.add_argument(f'user-agent={userAgent}')
 
-    driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
-    
-    driver.get('https://www.google.com')
-    title = driver.title
-    driver.close()
-    driver.quit()
-    return title
-
+'''
+AIRTABLE -> VPS -> TRADINGVIEW
+'''
 def selenium_trading(asset_name):
 
+    '''CHROME OPTIONS'''
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--start-maximized')
-
+    
+    '''USER AGENT'''
+    ua = UserAgent()
+    userAgent = ua.random
+    chrome_options.add_argument(f'user-agent={userAgent}')
+    
+    '''SETUP DRIVER'''
     driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
     
+    '''ACCESS TRADINGVIEW'''
     driver.get('https://www.tradingview.com/#signin')
     time.sleep(1)
     wait=WebDriverWait(driver, timeout=10)
@@ -69,23 +78,24 @@ def selenium_trading(asset_name):
     wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='username']"))).send_keys(trading_view_email)
     time.sleep(1)
     driver.find_element(By.XPATH, "//input[@name='password']").send_keys(f"{trading_view_password}" + Keys.RETURN)
-    
     # Wait for TradingView
     time.sleep(5)
 
+    '''ACCESS TRADINGVIEW CHART AND WAIT FOR SYMBOL SEARCH'''
     trading_view_chart_page = False
     while not trading_view_chart_page :
         driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
         time.sleep(5)
-        symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")    
+        symbol_search = driver.find_element(By.XPATH, "//*[@id='header-toolbar-symbol-search']")
         if symbol_search != []:
             trading_view_chart_page = True
             break
-
+    
+    '''SEARCH FOR SYMBOL'''
     symbol_search_visible = False 
     symbol_searched_for = False
     while not symbol_search_visible and not symbol_searched_for:
-        symbol_search = driver.find_element(By.XPATH, "//div[@title='Symbol Search' and @data-role='button']")
+        symbol_search = driver.find_element(By.XPATH, "//*[@id='header-toolbar-symbol-search']")
         driver.execute_script("arguments[0].click();", symbol_search)
         time.sleep(3)
         search_bar = driver.find_element(By.XPATH, "//input[@placeholder='Search']")
@@ -98,15 +108,15 @@ def selenium_trading(asset_name):
             time.sleep(1)
             wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']"))).send_keys(Keys.ENTER)
             time.sleep(5)
-            take_a_snapshot =  driver.find_elements(By.XPATH, "//div[@title='Take a snapshot']")    
+            take_a_snapshot = driver.find_elements(By.XPATH, "//button[@type='button'][@data-tooltip='Take a snapshot'][@aria-label='Take a snapshot']")
 
             if take_a_snapshot != []:
                 symbol_searched_for = True
 
-    # Take a snapshot 
+    '''TAKE A SNAPSHOT AND OPEN IMAGE IN NEW TAB'''
     new_tab_opened = False
     while not new_tab_opened:
-        take_a_snapshot =  driver.find_elements(By.XPATH, "//div[@title='Take a snapshot']")
+        take_a_snapshot = driver.find_elements(By.XPATH, "//button[@type='button'][@data-tooltip='Take a snapshot'][@aria-label='Take a snapshot']")
         open_image_in_new_tab = driver.find_elements(By.XPATH, "//span[text()='Open image in new tab']")
         
         for element in take_a_snapshot:
@@ -119,7 +129,7 @@ def selenium_trading(asset_name):
                 driver.execute_script("arguments[0].click();", open_image_in_new_tab)
                 new_tab_opened = True
                 break
-
+ 
     time.sleep(5)
     driver.switch_to.window(driver.window_handles[-1])
     trading_view_chart_image_url = driver.current_url
@@ -130,7 +140,9 @@ def selenium_trading(asset_name):
 
     return trading_view_chart_image_url, image_source_url
 
-
+'''
+AIRTABLE API REQUEST
+'''
 def airtable_api_request(api_url, data):
     """API request."""
     
@@ -142,18 +154,23 @@ def airtable_api_request(api_url, data):
     requests.patch(api_url, headers=headers, json=data)
     return True
 
-####################### Flask Routes #######################
 
+
+'''
+FLASK APP ROUTES
+'''
+
+'''
+HOME PAGE
+'''
 @app.route('/')
 def hello():
-    try:
-        title = selenium_home()
-        return f'Hello World! I have seen {title}.'
+    
+    return 'W!'
 
-    except Exception as e:
-        print(e.message)
-        return f'{e.message}'
-
+'''
+WEBHOOK AIRTABLE
+'''
 @app.route('/webhook_airtable', methods=['POST'])
 def webhook_airtable():
 
@@ -201,6 +218,9 @@ def webhook_airtable():
             "airtable response": f'{api_response}'
         }
 
+'''
+BYBIT BALANCE
+'''
 @app.route('/bybit_balance', methods=['POST'])
 def bybit_balance():
 
@@ -249,10 +269,15 @@ def bybit_balance():
             "airtable response": f'{api_response}'
         }
 
+'''
+NGINX CACHE'''
 @app.route('/cache-me')
 def cache():
 	return "nginx will cache this response"
 
+'''
+FLASK INFO
+'''
 @app.route('/info')
 def info():
 
@@ -265,6 +290,9 @@ def info():
 
 	return jsonify(resp)
 
+'''
+FLASK HEALTH CHECK
+'''
 @app.route('/flask-health-check')
 def flask_health_check():
 	return "success"
