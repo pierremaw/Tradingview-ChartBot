@@ -27,7 +27,7 @@ from flask import Flask, request, jsonify
 '''
 BYBIT
 '''
-from pybit import HTTP
+from pybit.unified_trading import HTTP
 bybit_api_key = "nkWOnzfGIJBpjwOKiX"
 bybit_secret_key = "W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16"
 
@@ -116,19 +116,15 @@ def selenium_trading(asset_name):
     '''TAKE A SNAPSHOT AND OPEN IMAGE IN NEW TAB'''
     new_tab_opened = False
     while not new_tab_opened:
-        take_a_snapshot = driver.find_elements(By.XPATH, "//button[@type='button'][@data-tooltip='Take a snapshot'][@aria-label='Take a snapshot']")
-        open_image_in_new_tab = driver.find_elements(By.XPATH, "//span[text()='Open image in new tab']")
-        
-        for element in take_a_snapshot:
-            driver.execute_script("arguments[0].click();", element)
-            time.sleep(1)
-            open_image_in_new_tab = driver.find_element(By.XPATH, "//span[text()='Open image in new tab']")
-            if open_image_in_new_tab != []:
-                open_image_in_new_tab = driver.find_element(By.XPATH, "//span[text()='Open image in new tab']")
-                driver.execute_script("arguments[0].click();", open_image_in_new_tab)
-                new_tab_opened = True
-                break
-    
+
+        take_a_snapshot = driver.find_element(By.XPATH, "//button[@type='button'][@data-tooltip='Take a snapshot'][@aria-label='Take a snapshot']")
+        driver.execute_script("arguments[0].click();", take_a_snapshot)
+        time.sleep(1)
+
+        open_image_in_new_tab = driver.find_element(By.XPATH, "//div[@data-name='open-image-in-new-tab']")
+        driver.execute_script("arguments[0].click();", open_image_in_new_tab)
+        new_tab_opened = True
+
     '''GET IMAGE URL AND SHUT DRIVER'''
     time.sleep(5)
     driver.switch_to.window(driver.window_handles[-1])
