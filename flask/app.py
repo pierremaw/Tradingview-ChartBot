@@ -151,7 +151,6 @@ def airtable_api_request(api_url, data):
     return True
 
 
-
 '''
 FLASK APP ROUTES
 '''
