@@ -1,39 +1,24 @@
-'''
-IMPORTS
-'''
 import time
 from datetime import datetime
 import requests
 import json
+
 import config as config
 
-'''
-SELENIUM
-'''
+from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Keys
-from fake_useragent import UserAgent
-
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-'''
-FLASK
-'''
 from flask import Flask, request, jsonify
 
-'''
-BYBIT
-'''
 from pybit.unified_trading import HTTP
 bybit_api_key = "nkWOnzfGIJBpjwOKiX"
 bybit_secret_key = "W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16"
 
-'''
-TRADINGVIEW
-'''
 trading_view_email = "pierre.maw@gmail.com"
 trading_view_password = "aKoZgT9UTN9mRiZ2xpiM"
 
@@ -52,24 +37,36 @@ FLASK APP
 app = Flask(__name__)
 
 
-'''
-AIRTABLE -> VPS -> TRADINGVIEW
-'''
-def selenium_trading(asset_name):
+def selenium_trading(asset_name: str):
+    '''
+    Get a tradingview chart, take a snapshot, and return the snapshot and image url.
 
-    '''CHROME OPTIONS'''
+    Data pipeline: Airtable -> VPS -> TradingView
+
+    Parameters
+    ----------
+    asset_name : str
+        The asset name to search for on TradingView.
+
+    Returns
+    -------
+    A string that contains the tradingview chart image url.
+    A string that contains the tradingview chart image source url.
+    '''
+
+    # Setup chrome options
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--start-maximized')
     
-    '''USER AGENT'''
+    # Setup user agent
     ua = UserAgent()
     userAgent = ua.random
     chrome_options.add_argument(f'user-agent={userAgent}')
     
-    '''SETUP DRIVER'''
+    # Setup webdriver
     driver = webdriver.Remote(command_executor=f'{remote_address}:4444',options=chrome_options)
     
-    '''ACCESS TRADINGVIEW'''
+    # Access tradingview and sign in
     driver.get('https://www.tradingview.com/#signin')
     time.sleep(1)
     wait=WebDriverWait(driver, timeout=10)
@@ -81,7 +78,7 @@ def selenium_trading(asset_name):
     # Wait for TradingView
     time.sleep(5)
 
-    '''ACCESS TRADINGVIEW CHART AND WAIT FOR SYMBOL SEARCH'''
+    # Access tradingview chart page
     trading_view_chart_page = False
     while not trading_view_chart_page :
         driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
@@ -91,7 +88,7 @@ def selenium_trading(asset_name):
             trading_view_chart_page = True
             break
     
-    '''SEARCH FOR SYMBOL'''
+    # Search for specific symbol
     symbol_search_visible = False 
     symbol_searched_for = False
     while not symbol_search_visible and not symbol_searched_for:
@@ -113,7 +110,7 @@ def selenium_trading(asset_name):
             if take_a_snapshot != []:
                 symbol_searched_for = True
 
-    '''TAKE A SNAPSHOT AND OPEN IMAGE IN NEW TAB'''
+    # Take a snapshot
     new_tab_opened = False
     while not new_tab_opened:
 
@@ -125,7 +122,7 @@ def selenium_trading(asset_name):
         driver.execute_script("arguments[0].click();", open_image_in_new_tab)
         new_tab_opened = True
 
-    '''GET IMAGE URL AND SHUT DRIVER'''
+    # Get image url
     time.sleep(5)
     driver.switch_to.window(driver.window_handles[-1])
     trading_view_chart_image_url = driver.current_url
@@ -136,11 +133,20 @@ def selenium_trading(asset_name):
 
     return trading_view_chart_image_url, image_source_url
 
-'''
-AIRTABLE API REQUEST
-'''
 def airtable_api_request(api_url, data):
-    """API request."""
+    '''
+    Make a request to the Airtable API.
+
+    Parameters
+    ----------
+    api_url : str
+        The Airtable API url.
+    data : dict
+
+    Returns
+    -------
+    A boolean that indicates if the request was successful.
+    '''
     
     headers = {
         'Content-Type': 'application/json',
@@ -151,24 +157,40 @@ def airtable_api_request(api_url, data):
     return True
 
 
-'''
-FLASK APP ROUTES
-'''
+'''FLASK APP ROUTES'''
 
-'''
-HOME PAGE
-'''
 @app.route('/')
 def hello():
+    '''
+    Flask route for homepage
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    A string that contains the text 'W!'.
+    '''
     
     return 'W!'
 
-'''
-WEBHOOK AIRTABLE
-'''
 @app.route('/webhook_airtable', methods=['POST'])
 def webhook_airtable():
+    '''
+    Flask route for Airtable webhook. The route accepts a POST request and returns a JSON object.
 
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    A dictionary that contains the code and message.
+
+    '''
+
+    # get the data from the request
     webhook_data = json.loads(request.data)
     if webhook_data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
         return {
@@ -183,6 +205,7 @@ def webhook_airtable():
     # call the selenium webdriver function
     tradingview_chart_data = selenium_trading(asset_name)
 
+    # Setup the data for the Airtable API request
     data = {"records": 
     [
         {"id": record_id,
@@ -197,10 +220,12 @@ def webhook_airtable():
     ]
     }
 
+    # Airtable API request
     airtable_table = 'tbl6MlOcqL99B445n' # Trading Viw Setups Table
     api_url = f'https://api.airtable.com/v0/appkfyJCQlrzAluvw/{airtable_table}/'
     api_response = airtable_api_request(api_url, data)
 
+    # Return the response
     if api_response:
         return {
             "code": "success",
@@ -213,12 +238,21 @@ def webhook_airtable():
             "airtable response": f'{api_response}'
         }
 
-'''
-BYBIT BALANCE
-'''
 @app.route('/bybit_balance', methods=['POST'])
 def bybit_balance():
+    '''
+    Flask route for Bybit balance webhook. The route accepts a POST request and returns a JSON object.
 
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    A dictionary that contains the code and message.
+    '''
+
+    # Get the data from the POST request
     data = json.loads(request.data)
     if data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
         return {
@@ -228,16 +262,18 @@ def bybit_balance():
     record_id = data['record_id']
     balance_field = data['request_type']
         
-    #Get Wallet Balance
+    # Bybit API request
     session = HTTP(
         endpoint = 'https://api.bybit.com/',
         api_key = bybit_api_key,
         api_secret = bybit_secret_key
     )
 
+    # Get balance
     balance_request = session.get_wallet_balance(coin="USDT")
     balance = balance_request["result"]["USDT"]["wallet_balance"]
 
+    # Setup the data for the Airtable API request
     data = {"records": 
     [
         {"id": record_id,
@@ -248,10 +284,12 @@ def bybit_balance():
     ]
     }
     
+    # Airtable API request
     airtable_table = 'tblsdUW4vxAB7molM' # Trading Journal Table
     api_url = f'https://api.airtable.com/v0/appkfyJCQlrzAluvw/{airtable_table}/'
     api_response = airtable_api_request(api_url, data)
 
+    # Return the response
     if api_response:
         return {
             "code": "success",
@@ -264,30 +302,56 @@ def bybit_balance():
             "airtable response": f'{api_response}'
         }
 
-'''
-NGINX CACHE'''
 @app.route('/cache-me')
 def cache():
-	return "nginx will cache this response"
+    '''
+    Flask route for testing nginx caching.
+    
+    Parameters
+    ----------
 
-'''
-FLASK INFO
-'''
+    Returns
+    -------
+    A string that contains the text 'nginx will cache this response'.
+
+    '''
+    return "nginx will cache this response"
+
 @app.route('/info')
 def info():
+    '''
+    Flask route for info.
 
-	resp = {
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    A dictionary that contains the connecting IP, proxy IP, host and user-agent.
+
+    '''
+    resp = {
 		'connecting_ip': request.headers['X-Real-IP'],
 		'proxy_ip': request.headers['X-Forwarded-For'],
 		'host': request.headers['Host'],
 		'user-agent': request.headers['User-Agent']
 	}
+    
+    return jsonify(resp)
 
-	return jsonify(resp)
-
-'''
-FLASK HEALTH CHECK
-'''
 @app.route('/flask-health-check')
 def flask_health_check():
-	return "success"
+    '''
+    Flask route for health check.
+    
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    A string that contains the text 'success'.
+
+    '''
+    return "success"
