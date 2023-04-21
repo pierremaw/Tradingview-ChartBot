@@ -15,27 +15,23 @@ from selenium.webdriver.common.by import By
 
 from flask import Flask, request, jsonify
 
+# Pybit
 from pybit.unified_trading import HTTP
 bybit_api_key = "nkWOnzfGIJBpjwOKiX"
 bybit_secret_key = "W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16"
 
+# TradingView
 trading_view_email = "pierre.maw@gmail.com"
 trading_view_password = "aKoZgT9UTN9mRiZ2xpiM"
 
+# Airtable
 airtable_api_key = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf02de7231d1e3f48c6d11ad'
 airtable_base_id = 'appkfyJCQlrzAluvw'
 airtable_table_name = 'tbl6MlOcqL99B445n'
 
-'''
-VPS ADDRESS
-'''
 remote_address = 'http://5.161.52.144'
 
-'''
-FLASK APP
-'''
 app = Flask(__name__)
-
 
 def selenium_trading(asset_name: str):
     '''
