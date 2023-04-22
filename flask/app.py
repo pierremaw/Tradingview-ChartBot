@@ -200,9 +200,16 @@ def webhook_airtable():
     record_id = webhook_data['record_id']
     asset_name = webhook_data['asset']
     chart_request_type = webhook_data['request_type']
-    setup_type = webhook_data['setup']
-    setup_type = f'| {setup_type}'
+    timeframe = webhook_data['timeframe']
+    pattern = webhook_data['pattern']
 
+    # Check if 'sandwich' is in the setup type
+    if 'sandwich' in pattern:
+        setup_type = f'| {timeframe} sandwich'
+    # Check if 'ep - 1d & 1w' is in the setup type
+    elif 'ep - 1d & 1w' in pattern:
+        setup_type = f'| ep - 1d & 1w'
+    
     # Create a timestamp using today's date
     time_stamp = datetime.today().strftime('%Y-%m-%d')
     
@@ -217,7 +224,7 @@ def webhook_airtable():
             f"{chart_request_type} Reference": tradingview_chart_data[0],
             f"{chart_request_type}": [{
                 "url": tradingview_chart_data[1],
-                "filename": f"[{time_stamp}] {asset_name} {chart_request_type} {setup_type}.png"
+                "filename": f"[{time_stamp}] {asset_name} {setup_type}.png"
                 }]
             }
         },
