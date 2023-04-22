@@ -186,19 +186,27 @@ def webhook_airtable():
 
     '''
 
-    # get the data from the request
+    # Get the data from the request
     webhook_data = json.loads(request.data)
+    
+    # Check if the passphrase is correct
     if webhook_data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
         return {
             "code": "error",
             "message": "Invalid passphrase"
         }
+    
+    # Parse the data from the request
     record_id = webhook_data['record_id']
     asset_name = webhook_data['asset']
     chart_request_type = webhook_data['request_type']
-    time_stamp = datetime.today().strftime('%Y-%m-%d')
+    setup_type = webhook_data['setup']
+    setup_type = f'| {setup_type}'
 
-    # call the selenium webdriver function
+    # Create a timestamp using today's date
+    time_stamp = datetime.today().strftime('%Y-%m-%d')
+    
+    # Call to the main function that gets the TradingView chart data
     tradingview_chart_data = selenium_trading(asset_name)
 
     # Setup the data for the Airtable API request
@@ -209,7 +217,7 @@ def webhook_airtable():
             f"{chart_request_type} Reference": tradingview_chart_data[0],
             f"{chart_request_type}": [{
                 "url": tradingview_chart_data[1],
-                "filename": f"[{time_stamp}] {asset_name} {chart_request_type}.png"
+                "filename": f"[{time_stamp}] {asset_name} {chart_request_type} {setup_type}.png"
                 }]
             }
         },
