@@ -1,5 +1,7 @@
 ## TradingView Chart Automation
 
+https://github.com/pierremaw/Tradingview-Chart-Automation/assets/99075249/91d60aae-25ed-4c99-be22-1e917539c521
+
 This repository contains a Python-based automation tool designed to provide helper functions for automation processes in Airtable, specifically when there are alerts from TradingView.
 
 ### Process Overview:
