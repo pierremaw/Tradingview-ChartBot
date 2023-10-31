@@ -6,9 +6,6 @@ import os
 from dotenv import load_dotenv
 load_dotenv()  # Load variables from .env file
 
-import config as config
-from config import remote_address
-
 from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -19,15 +16,20 @@ from selenium.webdriver.common.by import By
 
 from flask import Flask, request, jsonify
 
-# TradingView
-trading_view_email = os.environ.get('TRADING_VIEW_EMAIL')
-trading_view_password = os.environ.get('TRADING_VIEW_PASSWORD')
-
 # AirtabLE
 airtable_api_key = os.environ.get('AIRTABLE_API_KEY')
 airtable_api_url = os.environ.get('AIRTABLE_API_URL')
 airtable_base_id = os.environ.get('AIRTABLE_BASE_ID')
 airtable_table_name = os.environ.get('AIRTABLE_TABLE_NAME')
+
+# VPS
+remote_address = os.environ.get('REMOTE_ADDRESS')
+
+# TradingView
+trading_view_email = os.environ.get('TRADING_VIEW_EMAIL')
+trading_view_password = os.environ.get('TRADING_VIEW_PASSWORD')
+
+
 
 # Webhook
 webhook_passphrase = os.environ.get('WEBHOOK_PASSPHRASE')
@@ -35,7 +37,7 @@ chart_webhook_passphrase = os.environ.get('CHART_WEBHOOK_PASSPHRASE')
 
 app = Flask(__name__)
 
-def selenium_trading(asset_name: str):
+def selenium_chart(asset_name: str):
     '''
     Get a tradingview chart, take a snapshot, and return the snapshot and image url.
 
@@ -206,7 +208,7 @@ def webhook_airtable():
     time_stamp = datetime.today().strftime('%Y-%m-%d')
     
     # Call to the main function that gets the TradingView chart data
-    tradingview_chart_data = selenium_trading(asset_name)
+    tradingview_chart_data = selenium_chart(asset_name)
 
     # Setup the data for the Airtable API request
     data = {"records": 
