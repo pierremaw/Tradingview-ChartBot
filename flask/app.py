@@ -29,8 +29,6 @@ remote_address = os.environ.get('REMOTE_ADDRESS')
 trading_view_email = os.environ.get('TRADING_VIEW_EMAIL')
 trading_view_password = os.environ.get('TRADING_VIEW_PASSWORD')
 
-
-
 # Webhook
 webhook_passphrase = os.environ.get('WEBHOOK_PASSPHRASE')
 chart_webhook_passphrase = os.environ.get('CHART_WEBHOOK_PASSPHRASE')
