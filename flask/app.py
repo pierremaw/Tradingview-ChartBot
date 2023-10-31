@@ -2,8 +2,12 @@ import time
 from datetime import datetime
 import requests
 import json
+import os
+from dotenv import load_dotenv
+load_dotenv()  # Load variables from .env file
 
 import config as config
+from config import remote_address
 
 from fake_useragent import UserAgent
 from selenium import webdriver
@@ -15,21 +19,19 @@ from selenium.webdriver.common.by import By
 
 from flask import Flask, request, jsonify
 
-# Pybit
-from pybit.unified_trading import HTTP
-bybit_api_key = "nkWOnzfGIJBpjwOKiX"
-bybit_secret_key = "W7sMJ0LRwEwGl3JNOj0aqo2UG7tdasRPgY16"
-
 # TradingView
-trading_view_email = "pierre.maw@gmail.com"
-trading_view_password = "aKoZgT9UTN9mRiZ2xpiM"
+trading_view_email = os.environ.get('TRADING_VIEW_EMAIL')
+trading_view_password = os.environ.get('TRADING_VIEW_PASSWORD')
 
-# Airtable
-airtable_api_key = 'pat48T3AqL1nq9OK0.8916dff7d59b8e2b2db3bdaf26cf9a88f3ee94e7bf02de7231d1e3f48c6d11ad'
-airtable_base_id = 'appkfyJCQlrzAluvw'
-airtable_table_name = 'tbl6MlOcqL99B445n'
+# AirtabLE
+airtable_api_key = os.environ.get('AIRTABLE_API_KEY')
+airtable_api_url = os.environ.get('AIRTABLE_API_URL')
+airtable_base_id = os.environ.get('AIRTABLE_BASE_ID')
+airtable_table_name = os.environ.get('AIRTABLE_TABLE_NAME')
 
-remote_address = 'http://5.161.52.144'
+# Webhook
+webhook_passphrase = os.environ.get('WEBHOOK_PASSPHRASE')
+chart_webhook_passphrase = os.environ.get('CHART_WEBHOOK_PASSPHRASE')
 
 app = Flask(__name__)
 
@@ -77,7 +79,7 @@ def selenium_trading(asset_name: str):
     # Access tradingview chart page
     trading_view_chart_page = False
     while not trading_view_chart_page :
-        driver.get("https://www.tradingview.com/chart/6l6q6Oh0")
+        driver.get("https://www.tradingview.com/chart/")
         time.sleep(5)
         symbol_search = driver.find_element(By.XPATH, "//*[@id='header-toolbar-symbol-search']")
         if symbol_search != []:
@@ -129,13 +131,13 @@ def selenium_trading(asset_name: str):
 
     return trading_view_chart_image_url, image_source_url
 
-def airtable_api_request(api_url, data):
+def airtable_api_request(airtable_api_url, data):
     '''
     Make a request to the Airtable API.
 
     Parameters
     ----------
-    api_url : str
+    airtable_api_url : str
         The Airtable API url.
     data : dict
 
@@ -149,11 +151,8 @@ def airtable_api_request(api_url, data):
         'Authorization': f'Bearer {airtable_api_key}'
         }
     
-    requests.patch(api_url, headers=headers, json=data)
+    requests.patch(airtable_api_url, headers=headers, json=data)
     return True
-
-
-'''FLASK APP ROUTES'''
 
 @app.route('/')
 def hello():
@@ -190,7 +189,7 @@ def webhook_airtable():
     webhook_data = json.loads(request.data)
     
     # Check if the passphrase is correct
-    if webhook_data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
+    if webhook_data['passphrase'] != chart_webhook_passphrase:
         return {
             "code": "error",
             "message": "Invalid passphrase"
@@ -203,13 +202,6 @@ def webhook_airtable():
     timeframe = webhook_data['timeframe']
     pattern = webhook_data['pattern']
 
-    # Check if 'sandwich' is in the setup type
-    if 'sandwich' in pattern:
-        setup_type = f'| {timeframe} sandwich'
-    # Check if 'ep - 1d & 1w' is in the setup type
-    elif 'ep - 1d & 1w' in pattern:
-        setup_type = f'| ep - 1d & 1w'
-    
     # Create a timestamp using today's date
     time_stamp = datetime.today().strftime('%Y-%m-%d')
     
@@ -224,81 +216,15 @@ def webhook_airtable():
             f"{chart_request_type} Reference": tradingview_chart_data[0],
             f"{chart_request_type}": [{
                 "url": tradingview_chart_data[1],
-                "filename": f"[{time_stamp}] {asset_name} {setup_type}.png"
+                "filename": f"[{time_stamp}] {asset_name}.png"
                 }]
             }
         },
     ]
     }
 
-    # Airtable API request
-    airtable_table = 'tbl6MlOcqL99B445n' # Trading Viw Setups Table
-    api_url = f'https://api.airtable.com/v0/appkfyJCQlrzAluvw/{airtable_table}/'
-    api_response = airtable_api_request(api_url, data)
-
-    # Return the response
-    if api_response:
-        return {
-            "code": "success",
-            "message": "Airtable record updated successfully"
-        }
-    else:
-        return {
-            "code": "error",
-            "message": "Airtable record update failed",
-            "airtable response": f'{api_response}'
-        }
-
-@app.route('/bybit_balance', methods=['POST'])
-def bybit_balance():
-    '''
-    Flask route for Bybit balance webhook. The route accepts a POST request and returns a JSON object.
-
-    Parameters
-    ----------
-    None
-
-    Returns
-    -------
-    A dictionary that contains the code and message.
-    '''
-
-    # Get the data from the POST request
-    data = json.loads(request.data)
-    if data['passphrase'] != config.CHART_WEBHOOK_PASSPHRASE:
-        return {
-            "code": "error",
-            "message": "Invalid passphrase"
-        }
-    record_id = data['record_id']
-    balance_field = data['request_type']
-        
-    # Bybit API request
-    session = HTTP(
-        endpoint = 'https://api.bybit.com/',
-        api_key = bybit_api_key,
-        api_secret = bybit_secret_key
-    )
-
-    # Get balance
-    balance_request = session.get_wallet_balance(coin="USDT")
-    balance = balance_request["result"]["USDT"]["wallet_balance"]
-
-    # Setup the data for the Airtable API request
-    data = {"records": 
-    [
-        {"id": record_id,
-            "fields": {
-            f"{balance_field}": balance,
-            }
-        },
-    ]
-    }
-    
-    # Airtable API request
-    airtable_table = 'tblsdUW4vxAB7molM' # Trading Journal Table
-    api_url = f'https://api.airtable.com/v0/appkfyJCQlrzAluvw/{airtable_table}/'
-    api_response = airtable_api_request(api_url, data)
+    # Airtable API request & response
+    api_response = airtable_api_request(airtable_api_url, data)
 
     # Return the response
     if api_response:
