@@ -2,14 +2,12 @@
 
 https://github.com/pierremaw/Tradingview-Chart-Automation/assets/99075249/91d60aae-25ed-4c99-be22-1e917539c521
 
-This repository contains a Python-based automation tool designed to provide helper functions for automation processes in Airtable, specifically when there are alerts from TradingView.
+This Python bot provides helper functions for Airtable automation, particularly for TradingView alerts.
 
-### Process Overview:
-
-1. **TradingView Alert**: When an alert is triggered in TradingView, the information is transmitted directly to an Airtable base.
-2. **Airtable Storage**: The transmitted information from TradingView is stored in the Airtable base named "Trading View Setups". Each TradingView alert translates to a unique record in this base.
-3. **Airtable Automation**: After storing the alert information, Airtable runs a set of automation scripts. One of these scripts is responsible for sending a JSON-formatted webhook to a Virtual Private Server (VPS).
-4. **VPS Reception**: The VPS, which runs the server-side script from this repository, listens for and processes the webhook transmitted by Airtable.
+### Workflow
+1. Alert to Airtable: Alerts from TradingView are sent and stored in the Airtable base "TradingView Setups".
+2. Automation and Webhook: Post storage, Airtable automation scripts send a JSON webhook to a VPS.
+3. VPS Processing: VPS listens for the webhook and processes it using the bot from this repository.
 
 ### Features:
 
@@ -19,10 +17,10 @@ This repository contains a Python-based automation tool designed to provide help
 
 ### Prerequisites:
 
-1. Python (>=3.6)
-2. An account on TradingView.
-3. An Airtable base setup.
-4. A `.env` file containing all necessary environment variables.
+- Python (>=3.6)
+- An account on TradingView.
+- An Airtable base setup.
+- A `.env` file containing all necessary environment variables.
 
 ### Environment Variables:
 
