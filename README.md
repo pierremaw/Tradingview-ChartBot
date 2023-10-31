@@ -9,14 +9,12 @@ This Python bot provides helper functions for Airtable automation, particularly 
 2. Automation and Webhook: Post storage, Airtable automation scripts send a JSON webhook to a VPS.
 3. VPS Processing: VPS listens for the webhook and processes it using the bot from this repository.
 
-### Features:
-
+### Features
 - **TradingView Automation**: Using Selenium to access, search, and capture snapshots of charts.
 - **Airtable Integration**: After capturing the snapshot, the image and its URL will be saved into an Airtable base using the Airtable API.
 - **Flask Application**: A simple Flask application is integrated to serve as an API endpoint for triggering the automation, among other utility routes.
 
-### Prerequisites:
-
+### Prerequisites
 - Python (>=3.6)
 - An account on TradingView.
 - An Airtable base setup.
@@ -24,8 +22,7 @@ This Python bot provides helper functions for Airtable automation, particularly 
 - Selenium Grid
 - Docker
 
-### Environment Variables:
-
+### Environment Variables
 Here's what you need in your `.env` file:
 
 ```env
@@ -39,8 +36,7 @@ WEBHOOK_PASSPHRASE=your_webhook_passphrase
 CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 ```
 
-### Code Overview:
-
+### Code Overview
 - **Selenium Chart Function (`selenium_chart`)**:
   - This function takes in an `asset_name` and returns a TradingView chart's snapshot and image URL.
   - It signs into TradingView, navigates to the chart, searches for the asset, and takes a snapshot.
@@ -56,8 +52,7 @@ CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
     - **`/info`**: Returns details about the incoming request, like IPs and user-agents.
     - **`/flask-health-check`**: A health check route.
 
-### Setup & Run:
-
+### Setup & Run
 1. Clone this repository.
 2. Navigate to the cloned directory.
 3. Install the required packages: `pip install -r requirements.txt`
@@ -65,13 +60,12 @@ CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 5. Run the Flask app: `python app.py`
 6. Now, the application will be running and waiting for incoming requests.
 
-### Usage:
-
+### Usage
 To trigger the automation:
 
 1. Send a POST request to `/webhook_airtable` with the required data.
 2. The Flask app will process the request, capture the TradingView snapshot, and update the Airtable record.
 
-### Tip:
+### Tip
+This repo incorporates Docker for consistent environment deployment and Selenium Grid for parallel browser interactions. Docker ensures smooth deployment across platforms, while Selenium Grid enhances efficiency by handling multiple sessions simultaneously..
 
-This repo used docker and selenium grid.
