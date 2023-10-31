@@ -1,115 +1,75 @@
-# Compose Sample Application
+## TradingView to Airtable Automation
 
-This server side script performs some helper functions for automation processes in Airtable.
+This repository contains a Python-based automation tool designed to provide helper functions for automation processes in Airtable, specifically when there are alerts from TradingView.
 
-When there is a TradingView alert, TradingView transmits info to Airtable. 
+### Process Overview:
 
-This TradingView info is stored in the Airtable base named "Trading View Setups". 
-Each TradingView alert has it's own record in the "Trading View Setups" base.
+1. **TradingView Alert**: When an alert is triggered in TradingView, the information is transmitted directly to an Airtable base.
+2. **Airtable Storage**: The transmitted information from TradingView is stored in the Airtable base named "Trading View Setups". Each TradingView alert translates to a unique record in this base.
+3. **Airtable Automation**: After storing the alert information, Airtable runs a set of automation scripts. One of these scripts is responsible for sending a JSON-formatted webhook to a Virtual Private Server (VPS).
+4. **VPS Reception**: The VPS, which runs the server-side script from this repository, listens for and processes the webhook transmitted by Airtable.
 
-When a new record is inserted into the "Trading View Setups" base, Airtable performs some automation scripts. One automation script transmits a JSON formatted webhook to a VPS (The VPS running this serverside script). 
+### Features:
 
-The source repo used was awesome-compose/nginx-wsgi-flask.
+- **TradingView Automation**: Using Selenium to access, search, and capture snapshots of charts.
+- **Airtable Integration**: After capturing the snapshot, the image and its URL will be saved into an Airtable base using the Airtable API.
+- **Flask Application**: A simple Flask application is integrated to serve as an API endpoint for triggering the automation, among other utility routes.
 
-## NGINX Reverse Proxy -> WSGI -> Python/Flask Backend
+### Prerequisites:
 
-Project structure:
+1. Python (>=3.6)
+2. An account on TradingView.
+3. An Airtable base setup.
+4. A `.env` file containing all necessary environment variables.
 
-```text
-.
-├── compose.yaml
-├── flask
-│   ├── app.py
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── wsgi.py
-└── nginx
-    ├── default.conf
-    ├── Dockerfile
-    ├── nginx.conf
-    └── start.sh
+### Environment Variables:
+
+Here's what you need in your `.env` file:
+
+```env
+TRADING_VIEW_EMAIL=your_tradingview_email
+TRADING_VIEW_PASSWORD=your_tradingview_password
+AIRTABLE_API_KEY=your_airtable_api_key
+AIRTABLE_API_URL=your_airtable_api_url
+AIRTABLE_BASE_ID=your_airtable_base_id
+AIRTABLE_TABLE_NAME=your_airtable_table_name
+WEBHOOK_PASSPHRASE=your_webhook_passphrase
+CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 ```
 
-[_compose.yaml_](compose.yaml)
+### Code Overview:
 
-```yml
-services:
-  nginx-proxy:
-    build: nginx
-    ports:
-    - 80:80
-  flask-app:
-    build: flask
-    ...
-```
+- **Selenium Trading Function (`selenium_trading`)**:
+  - This function takes in an `asset_name` and returns a TradingView chart's snapshot and image URL.
+  - It signs into TradingView, navigates to the chart, searches for the asset, and takes a snapshot.
+  
+- **Airtable API Request Function (`airtable_api_request`)**:
+  - This function interacts with the Airtable API to update a specific record with the TradingView chart's snapshot and URL.
+  
+- **Flask Application**:
+  - The Flask app serves a couple of routes for different purposes:
+    - **`/`**: A basic home route.
+    - **`/webhook_airtable`**: The main route that triggers the automation when received a POST request.
+    - **`/cache-me`**: A testing route for Nginx caching.
+    - **`/info`**: Returns details about the incoming request, like IPs and user-agents.
+    - **`/flask-health-check`**: A health check route.
 
-The compose file defines an application with two services `nginx-proxy` and `flask-app`.
-When deploying the application, docker compose maps port 80 of the web service container to port 80 of the host as specified in the file.
+### Setup & Run:
 
-Make sure port 80 on the host is not being used by another container, otherwise the port should be changed.
+1. Clone this repository.
+2. Navigate to the cloned directory.
+3. Install the required packages: `pip install -r requirements.txt`
+4. Ensure you've set up the `.env` file correctly.
+5. Run the Flask app: `python filename.py`
+6. Now, the application will be running and waiting for incoming requests.
 
-## Deploy with docker compose
+### Usage:
 
-```bash
-$ docker compose up -d
-Creating network "nginx-wsgi-flask_default" with the default driver
-Building flask-app
-...
-Building nginx-proxy
-...
-Creating nginx-wsgi-flask_flask-app_1 ... done
-Creating nginx-wsgi-flask_nginx-proxy_1 ... done
-```
+To trigger the automation:
 
-## Expected result
+1. Send a POST request to `/webhook_airtable` with the required data.
+2. The Flask app will process the request, capture the TradingView snapshot, and update the Airtable record.
 
-Listing containers must show two containers running and the port mapping as below:
+### Tip:
 
-```bash
-$ docker ps
-CONTAINER ID   IMAGE            COMMAND                  CREATED              STATUS                        PORTS                              NAMES
-bde3f29cf571   ...nginx-proxy   "/docker-entrypoint.…"   About a minute ago   Up About a minute (healthy)   0.0.0.0:80->80/tcp                 ...nginx-proxy_1
-86c44470b547   ...flask-app     "gunicorn -w 3 -t 60…"   About a minute ago   Up About a minute (healthy)   5000/tcp, 0.0.0.0:8000->8000/tcp   ...flask-app_1
-```
-
-After the application starts, navigate to `http://localhost:80` in your web browser or run:
-
-```bash
-$ curl localhost:80
-Hello World!
-```
-
-Stop and remove the containers
-
-```bash
-$ docker compose down
-Stopping nginx-wsgi-flask_nginx-proxy_1 ... done
-Stopping nginx-wsgi-flask_flask-app_1   ... done
-Removing nginx-wsgi-flask_nginx-proxy_1 ... done
-Removing nginx-wsgi-flask_flask-app_1   ... done
-Removing network nginx-wsgi-flask_default
-```
-
-## About
-
-By following the steps above, you will have an NGINX Reverse Proxy and a Flask backend. The general traffic flow will look like the following:
-
-`Client -> NGINX -> WSGI -> Flask`
-
-### NGINX
-
-With this deployment model, we use NGINX to proxy and handle all requests to our Flask backend. This is a powerful deployment model as we can use NGINX to cache responses or even act as an application load balancer between multiple Flask backends. You could also integrate a Web Application Firewall into NGINX to protect your Flask backend from attacks.
-
-### WSGI
-
-WSGI (Web Server Gateway Interface) is the interface that sits in between our NGINX proxy and Flask backend. It is used to handle requests and interface with our backend. WSGI allows you to handle thousands of requests at a time and is highly scalable. In this `docker-compose` sample, we use Gunicorn for our WSGI.
-
-### Flask
-
-Flask is a web development framework written in Python. It is the "backend" which processes requests.
-
-A couple of sample endpoints are provided in this `docker-compose` example:
-
-* `/` - Returns a "Hello World!" string.
-* `/cache-me` - Returns a string which is cached by the NGINX reverse proxy. This demonstrates an intermediary cache implementation.
-* `/info` - Returns informational headers about the request. Some are passed from NGINX for added client visibility.
+Ensure that your environment can handle multiple instances of the web driver if there will be concurrent requests to this tool. You may need to set up a grid or use a cloud-based Selenium solution for better scalability.
