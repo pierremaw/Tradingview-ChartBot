@@ -4,7 +4,7 @@ https://github.com/pierremaw/Tradingview-Chart-Automation/assets/99075249/91d60a
 
 This Python bot provides helper functions for Airtable automation, particularly for TradingView alerts.
 
-### Workflow
+### Process Overview
 1. Alert to Airtable: Alerts from TradingView are sent and stored in the Airtable base "TradingView Setups".
 2. Automation and Webhook: Post storage, Airtable automation scripts send a JSON webhook to a VPS.
 3. VPS Processing: VPS listens for the webhook and processes it using the bot from this repository.
