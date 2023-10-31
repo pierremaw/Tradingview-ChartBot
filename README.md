@@ -17,9 +17,9 @@ This Python bot provides helper functions for an Airtable automation. The bot li
 
 ### Prerequisites
 - Python (>=3.6)
-- An account on TradingView.
-- An Airtable base setup.
-- A `.env` file containing all necessary environment variables.
+- An account on TradingView
+- An Airtable base setup
+- A `.env` file containing all necessary environment variables
 - Selenium Grid
 - Docker
 
