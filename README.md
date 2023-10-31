@@ -39,7 +39,7 @@ CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 
 ### Code Overview:
 
-- **Selenium Trading Function (`selenium_trading`)**:
+- **Selenium Chart Function (`selenium_chart`)**:
   - This function takes in an `asset_name` and returns a TradingView chart's snapshot and image URL.
   - It signs into TradingView, navigates to the chart, searches for the asset, and takes a snapshot.
   
@@ -60,7 +60,7 @@ CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 2. Navigate to the cloned directory.
 3. Install the required packages: `pip install -r requirements.txt`
 4. Ensure you've set up the `.env` file correctly.
-5. Run the Flask app: `python filename.py`
+5. Run the Flask app: `python app.py`
 6. Now, the application will be running and waiting for incoming requests.
 
 ### Usage:
