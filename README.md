@@ -21,6 +21,8 @@ This Python bot provides helper functions for Airtable automation, particularly 
 - An account on TradingView.
 - An Airtable base setup.
 - A `.env` file containing all necessary environment variables.
+- Selenium Grid
+- Docker
 
 ### Environment Variables:
 
@@ -72,4 +74,4 @@ To trigger the automation:
 
 ### Tip:
 
-Ensure that your environment can handle multiple instances of the web driver if there will be concurrent requests to this tool. You may need to set up a grid or use a cloud-based Selenium solution for better scalability.
+This repo used docker and selenium grid.
