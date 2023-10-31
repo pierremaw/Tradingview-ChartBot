@@ -1,4 +1,4 @@
-## TradingView to Airtable Automation
+## TradingView Chart Automation
 
 This repository contains a Python-based automation tool designed to provide helper functions for automation processes in Airtable, specifically when there are alerts from TradingView.
 
