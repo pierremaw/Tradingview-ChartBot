@@ -2,7 +2,7 @@
 
 https://github.com/pierremaw/Tradingview-Chart-Automation/assets/99075249/91d60aae-25ed-4c99-be22-1e917539c521
 
-This Python bot provides helper functions for Airtable automation. The bot is hosted on a VPS and listens for webhooks from Airtable. Once a webhook is received, the bot parses the data, uses Selenium Grid to navigate to TradingView, takes a snapshot, and then uploads the snapshot to Airtable via its API.
+This Python bot provides helper functions for a custom Airtable automation. The bot is hosted on a VPS and listens for webhooks from Airtable. Once a webhook is received, the bot parses the data, uses Selenium Grid to navigate to TradingView, takes a snapshot, and then uploads the snapshot to Airtable via its API.
 
 
 ### Process Overview
