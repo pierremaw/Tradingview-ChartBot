@@ -21,6 +21,7 @@ This Python bot provides helper functions for a custom Airtable automation. The 
 - An Airtable base setup
 - A `.env` file containing all necessary environment variables
 - Selenium Grid
+- VPS
 - Docker
 
 ### Environment Variables
@@ -53,14 +54,6 @@ CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
     - **`/info`**: Returns details about the incoming request, like IPs and user-agents.
     - **`/flask-health-check`**: A health check route.
 
-### Setup & Run
-1. Clone this repository.
-2. Navigate to the cloned directory.
-3. Install the required packages: `pip install -r requirements.txt`.
-4. Ensure you've set up the `.env` file correctly.
-5. Run the Flask app: `python app.py`.
-6. Now, the application will be running and waiting for incoming requests.
-
 ### Usage
 To trigger the automation:
 
@@ -68,5 +61,4 @@ To trigger the automation:
 2. The Flask app will process the request, capture the TradingView snapshot, and update the Airtable record.
 
 ### Tip
-This repo incorporates Docker for consistent environment deployment and Selenium Grid for parallel browser interactions. Docker ensures smooth deployment across platforms, while Selenium Grid enhances efficiency by handling multiple sessions simultaneously.
-
+This repo incorporates Docker for consistent environment deployment and Selenium Grid for chart snapshot queueing.
