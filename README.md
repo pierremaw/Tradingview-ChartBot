@@ -3,10 +3,10 @@
 https://github.com/pierremaw/Tradingview-Chart-Automation/assets/99075249/91d60aae-25ed-4c99-be22-1e917539c521
 
 This automation bot:
-    1. Uses selenium to navigate to TradingView.
-    2. Accesses the chart for the asset specified via the parameter.
-    3. Takes a chart image snapshot.
-    4. Returns the chart image url and image source url.
+1. Uses selenium to navigate to TradingView.
+2. Accesses the chart for the asset specified via the parameter.
+3. Takes a chart image snapshot.
+4. Returns the chart image url and image source url.
 
 This automation bot provides helper functions for a custom Airtable automation. The bot is hosted on a VPS and listens for webhooks from Airtable. Once a webhook is received, the bot parses the data, uses Selenium to navigate to TradingView, takes a snapshot, and then uploads the snapshot to Airtable via its API.
 
