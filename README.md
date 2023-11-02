@@ -40,20 +40,20 @@ CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 ```
 
 ### Code Overview
-- **Selenium Chart Function (`selenium_chart`)**:
-  - This function takes in an `asset_name` and returns a TradingView chart's snapshot and image URL.
-  - It signs into TradingView, navigates to the chart, searches for the asset, and takes a snapshot.
+#### **Selenium Chart Function (`selenium_chart`)**
+- This function takes in an `asset_name` and returns a TradingView chart's snapshot and image URL.
+- It signs into TradingView, navigates to the chart, searches for the asset, and takes a snapshot.
   
-- **Airtable API Request Function (`airtable_api_request`)**:
-  - This function interacts with the Airtable API to update a specific record with the TradingView chart's snapshot and URL.
+#### **Airtable API Request Function (`airtable_api_request`)**
+- This function interacts with the Airtable API to update a specific record with the TradingView chart's snapshot and URL.
   
-- **Flask Application**:
-  - The Flask app serves a couple of routes for different purposes:
-    - **`/`**: A basic home route.
-    - **`/webhook_airtable`**: The main route that triggers the automation when received a POST request.
-    - **`/cache-me`**: A testing route for Nginx caching.
-    - **`/info`**: Returns details about the incoming request, like IPs and user-agents.
-    - **`/flask-health-check`**: A health check route.
+#### **Flask Application**
+The Flask app serves a couple of routes for different purposes:
+  - **`/`**: A basic home route.
+  - **`/webhook_airtable`**: The main route that triggers the automation when received a POST request.
+  - **`/cache-me`**: A testing route for Nginx caching.
+  - **`/info`**: Returns details about the incoming request, like IPs and user-agents.
+  - **`/flask-health-check`**: A health check route.
 
 ### Usage
 To trigger the automation:
