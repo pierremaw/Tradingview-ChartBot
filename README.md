@@ -23,6 +23,7 @@ This automation bot provides helper functions for a custom Airtable automation. 
 - Selenium Grid
 - VPS
 - Docker
+- Flask
 
 ### Environment Variables
 Here's what you need in your `.env` file:
