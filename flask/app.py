@@ -37,9 +37,11 @@ app = Flask(__name__)
 
 def selenium_chart(asset_name: str):
     '''
-    Get a tradingview chart, take a snapshot, and return the snapshot and image url.
-
-    Data pipeline: Airtable -> VPS -> TradingView
+    This function:
+    1. Uses selenium to navigate to TradingView.
+    2. Accesses the chart for the asset specified via the parameter.
+    3. Takes a chart image snapshot.
+    4. Returns the chart image url and image source url.
 
     Parameters
     ----------
