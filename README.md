@@ -48,7 +48,7 @@ CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 - This function interacts with the Airtable API to update a specific record with the TradingView chart's snapshot and URL.
   
 #### **Flask Application**
-The Flask app serves a couple of routes for different purposes:
+The Flask app has these routes:
   - **`/`**: A basic home route.
   - **`/webhook_airtable`**: The main route that triggers the automation when received a POST request.
   - **`/cache-me`**: A testing route for Nginx caching.
