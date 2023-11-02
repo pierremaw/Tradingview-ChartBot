@@ -55,11 +55,8 @@ The Flask app serves a couple of routes for different purposes:
   - **`/info`**: Returns details about the incoming request, like IPs and user-agents.
   - **`/flask-health-check`**: A health check route.
 
-### Usage
+### Tip
 To trigger the automation:
 
 1. Send a POST request to `/webhook_airtable` with the required data.
 2. The Flask app will process the request, capture the TradingView snapshot, and update the Airtable record.
-
-### Tip
-This repo incorporates Docker for consistent environment deployment and Selenium Grid for chart snapshot queueing.
