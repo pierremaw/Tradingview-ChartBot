@@ -16,7 +16,7 @@ from selenium.webdriver.common.by import By
 
 from flask import Flask, request, jsonify
 
-# AirtabLE
+# Airtable
 airtable_api_key = os.environ.get('AIRTABLE_API_KEY')
 airtable_api_url = os.environ.get('AIRTABLE_API_URL')
 airtable_base_id = os.environ.get('AIRTABLE_BASE_ID')
