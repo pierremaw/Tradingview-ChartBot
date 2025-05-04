@@ -4,8 +4,6 @@
 
 I created this project to explore automated financial data visualization and get better at full-stack Python development.
 
-By combining real-time chart capture with structured record updates, this bot acts as a lightweight charting engine that can plug into personal dashboards, market research tools, or workflow automations. The service is deployed on a VPS and operates entirely from webhook input—no manual interaction required after setup.
-
 This project reflects my proficiency in:
 
 - Using Selenium to control browser behavior for authenticated sites
