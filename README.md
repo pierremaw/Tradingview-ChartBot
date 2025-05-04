@@ -1,5 +1,7 @@
 # TradingView ChartBot: Automated Market Chart Snapshots with Airtable Integration
 
+https://github.com/user-attachments/assets/7a7d5169-4c25-4b56-a5f2-c0dcdc6ed6b1
+
 **TradingView ChartBot** is a Python-based microservice that automatically captures real-time chart snapshots from TradingView and updates them to Airtable using webhooks. Built with Selenium and Flask, it runs on a remote server, listens for asset data, and delivers high-resolution images of live charts directly into structured Airtable records.
 
 I created this project to explore automated financial data visualization and get better at full-stack Python development.
