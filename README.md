@@ -1,82 +1,110 @@
-# TradingView Chart Capture Automation
+# TradingView ChartBot: Automated Chart Snapshots to Airtable
 
-A streamlined automation service that captures live TradingView chart snapshots and syncs them with Airtable. Powered by Selenium, Flask, and Docker, this bot listens for webhooks and delivers high-resolution chart images directly to your Airtable base.
+TradingView ChartBot is a Python-based automation tool that uses Selenium and Flask to fetch high-resolution snapshots of TradingView charts and automatically update corresponding records in Airtable. This service is ideal for analysts, fintech teams, and dashboards that rely on real-time chart imagery. It integrates tightly with Airtable and is triggered via webhook-based requests to a Flask server hosted on a VPS.
 
-## Overview
+## How It Works
 
-This automation bot performs end-to-end chart image generation and Airtable integration. Once it receives a webhook, it:
+When triggered by a webhook, the bot executes the following steps:
 
-1. Logs into TradingView using Selenium.
-2. Navigates to the specified asset's chart.
-3. Captures a snapshot of the chart.
-4. Uploads the image and its URL to a designated Airtable record.
+1. Launches a browser session through Selenium Grid.
+2. Logs into TradingView using secure credentials stored in the environment.
+3. Opens the chart for a specified asset and takes a snapshot.
+4. Captures the URL and image source of the chart snapshot.
+5. Updates an Airtable record using the Airtable API, attaching the image and reference URL.
 
-Hosted on a VPS and wrapped in a Flask app, this service enables chart-driven workflows and custom data pipelines.
+The Flask server manages the webhook input and coordinates the entire process.
 
-## Key Features
+## Features
 
-### 🔍 TradingView Automation
-Automates login, chart navigation, and snapshot generation on TradingView using Selenium. Ideal for generating visual reports or monitoring market movements.
+### Automated TradingView Charting
 
-### 📦 Airtable Integration
-Automatically uploads chart images and links to your Airtable base using the Airtable API. Supports dynamic record updates based on webhook payloads.
+This tool automates the end-to-end process of navigating TradingView, searching for an asset, and capturing a chart snapshot using Selenium WebDriver. The snapshot is accessed via a newly opened tab and returned as both a URL and image source.
 
-### 🌐 Flask API Service
-A lightweight Flask server handles incoming webhooks, manages requests, and routes various utility functions.
+### Webhook-Driven API
 
-## Prerequisites
+The Flask application exposes a `/webhook_airtable` POST route that accepts JSON payloads with details like `asset`, `record_id`, and `request_type`. This allows other services, such as Airtable automations or third-party systems, to trigger chart captures on demand.
 
-To deploy and run the automation, ensure the following:
+### Airtable Integration
 
-- Python ≥ 3.6
-- A TradingView account
-- Airtable account with a base and API access
-- A VPS (virtual private server)
-- Docker and Docker Compose
-- Selenium Grid (or a compatible WebDriver setup)
-- A `.env` file with required environment variables
+After capturing the chart image, the bot sends a PATCH request to Airtable, updating the record with the image file and a reference link. This setup allows the bot to act as a bridge between TradingView visual data and your Airtable workspace.
 
-## Environment Variables
+### Flask API Server
 
-Your `.env` file should include:
+The project is built around a Flask server that listens for incoming webhooks and also offers diagnostic endpoints for debugging and health monitoring.
+
+## Environment Configuration
+
+Create a `.env` file in your project root with the following variables:
 
 ```env
 TRADING_VIEW_EMAIL=your_tradingview_email
 TRADING_VIEW_PASSWORD=your_tradingview_password
+
 AIRTABLE_API_KEY=your_airtable_api_key
 AIRTABLE_API_URL=your_airtable_api_url
 AIRTABLE_BASE_ID=your_airtable_base_id
 AIRTABLE_TABLE_NAME=your_airtable_table_name
+
 WEBHOOK_PASSPHRASE=your_webhook_passphrase
 CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
+REMOTE_ADDRESS=http://your-selenium-grid-address
 ````
 
-## Code Architecture
+These environment variables are loaded at runtime and are critical for authentication and routing.
+
+## Code Overview
 
 ### `selenium_chart(asset_name)`
 
-Logs into TradingView, searches for the specified asset, captures a chart snapshot, and returns both the image URL and the image source.
+Logs into TradingView, navigates to the chart for the given asset, takes a snapshot, and returns both the image URL and the image source. This function uses a randomized user agent and supports Selenium Grid execution.
 
-### `airtable_api_request(image_url, image_src)`
+### `airtable_api_request(api_url, data)`
 
-Sends a PATCH request to Airtable to update a record with the chart image and metadata.
+Wraps a PATCH request to update a record in Airtable with the provided JSON `data`. The headers are configured using your Airtable API key.
 
-### Flask Routes
+### Flask Endpoints
 
-* `/`: Root route for health confirmation.
-* `/webhook_airtable`: Receives POST requests from Airtable and triggers the automation workflow.
-* `/cache-me`: A test endpoint for validating Nginx or proxy caching.
-* `/info`: Debug endpoint showing request metadata.
-* `/flask-health-check`: Health check route used for monitoring.
+* `/`: Basic root endpoint returning `"W!"`.
+* `/webhook_airtable`: Accepts a POST request and triggers the full chart capture and Airtable update.
+* `/cache-me`: Dummy route for testing Nginx cache behavior.
+* `/info`: Shows request metadata such as headers, host, and IP.
+* `/flask-health-check`: Health check endpoint returning a simple success string.
 
-## Triggering the Automation
+## Dependencies
 
-To initiate a snapshot and Airtable update:
+Install the required packages using pip:
 
-1. Send a `POST` request to `/webhook_airtable` with the required JSON payload.
-2. The bot authenticates with TradingView, captures the chart image, and updates your Airtable record.
+```bash
+pip install -r requirements.txt
+```
 
-## License
+Key dependencies include:
 
-MIT License
+* selenium
+* flask
+* python-dotenv
+* fake\_useragent
+* requests
 
+Ensure you also have a Selenium Grid setup and Chrome WebDriver accessible through the address specified in `REMOTE_ADDRESS`.
+
+## Example Webhook Payload
+
+To trigger the automation, send a POST request to `/webhook_airtable` with the following JSON structure:
+
+```json
+{
+  "passphrase": "your_chart_webhook_passphrase",
+  "record_id": "recXXXXXXXXXX",
+  "asset": "AAPL",
+  "request_type": "Daily Chart",
+  "timeframe": "1D",
+  "pattern": "Breakout"
+}
+```
+
+The record in Airtable will be updated with a file upload and a URL in the field named by `request_type`.
+
+## Deployment
+
+You can run the application on any VPS with Python 3.6 or newer. Docker support is recommended for production use. Ensure your Selenium Grid is also running in the environment, either locally or remotely.
