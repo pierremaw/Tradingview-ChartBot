@@ -1,32 +1,44 @@
-## TradingView Chart Automation
+# TradingView Chart Capture Automation
 
-https://github.com/pierremaw/Tradingview-Chart-Automation/assets/99075249/91d60aae-25ed-4c99-be22-1e917539c521
+A streamlined automation service that captures live TradingView chart snapshots and syncs them with Airtable. Powered by Selenium, Flask, and Docker, this bot listens for webhooks and delivers high-resolution chart images directly to your Airtable base.
 
-This automation bot:
-1. Uses selenium to navigate to TradingView.
-2. Accesses the chart for the asset specified via the parameter.
-3. Takes a chart image snapshot.
-4. Returns the chart image url and image source url.
+## Overview
 
-This automation bot provides helper functions for a custom Airtable automation. The bot is hosted on a VPS and listens for webhooks from Airtable. Once a webhook is received, the bot parses the data, uses Selenium to navigate to TradingView, takes a snapshot, and then uploads the snapshot to Airtable via its API.
+This automation bot performs end-to-end chart image generation and Airtable integration. Once it receives a webhook, it:
 
-### Features
-- **TradingView Automation**: Using Selenium to access, search, and capture snapshots of charts.
-- **Airtable Integration**: After capturing the snapshot, the image and its URL will be saved into an Airtable base using the Airtable API.
-- **Flask Application**: A simple Flask application is integrated to serve as an API endpoint for triggering the automation, among other utility routes.
+1. Logs into TradingView using Selenium.
+2. Navigates to the specified asset's chart.
+3. Captures a snapshot of the chart.
+4. Uploads the image and its URL to a designated Airtable record.
 
-### Prerequisites
-- Python (>=3.6)
-- An account on TradingView
-- An Airtable base setup
-- A `.env` file containing all necessary environment variables
-- Selenium Grid
-- VPS
-- Docker
-- Flask
+Hosted on a VPS and wrapped in a Flask app, this service enables chart-driven workflows and custom data pipelines.
 
-### Environment Variables
-Here's what you need in your `.env` file:
+## Key Features
+
+### 🔍 TradingView Automation
+Automates login, chart navigation, and snapshot generation on TradingView using Selenium. Ideal for generating visual reports or monitoring market movements.
+
+### 📦 Airtable Integration
+Automatically uploads chart images and links to your Airtable base using the Airtable API. Supports dynamic record updates based on webhook payloads.
+
+### 🌐 Flask API Service
+A lightweight Flask server handles incoming webhooks, manages requests, and routes various utility functions.
+
+## Prerequisites
+
+To deploy and run the automation, ensure the following:
+
+- Python ≥ 3.6
+- A TradingView account
+- Airtable account with a base and API access
+- A VPS (virtual private server)
+- Docker and Docker Compose
+- Selenium Grid (or a compatible WebDriver setup)
+- A `.env` file with required environment variables
+
+## Environment Variables
+
+Your `.env` file should include:
 
 ```env
 TRADING_VIEW_EMAIL=your_tradingview_email
@@ -37,26 +49,34 @@ AIRTABLE_BASE_ID=your_airtable_base_id
 AIRTABLE_TABLE_NAME=your_airtable_table_name
 WEBHOOK_PASSPHRASE=your_webhook_passphrase
 CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
-```
+````
 
-### Code Overview
-#### **Selenium Chart Function (`selenium_chart`)**
-- This function takes in an `asset_name` and returns a TradingView chart's snapshot and image URL.
-- It signs into TradingView, navigates to the chart, searches for the asset, and takes a snapshot.
-  
-#### **Airtable API Request Function (`airtable_api_request`)**
-- This function interacts with the Airtable API to update a specific record with the TradingView chart's snapshot and URL.
-  
-#### **Flask Application**
-The Flask app has these routes:
-  - **`/`**: A basic home route.
-  - **`/webhook_airtable`**: The main route that triggers the automation when received a POST request.
-  - **`/cache-me`**: A testing route for Nginx caching.
-  - **`/info`**: Returns details about the incoming request, like IPs and user-agents.
-  - **`/flask-health-check`**: A health check route.
+## Code Architecture
 
-### Tip
-To trigger the automation:
+### `selenium_chart(asset_name)`
 
-1. Send a POST request to `/webhook_airtable` with the required data.
-2. The Flask app will process the request, capture the TradingView snapshot, and update the Airtable record.
+Logs into TradingView, searches for the specified asset, captures a chart snapshot, and returns both the image URL and the image source.
+
+### `airtable_api_request(image_url, image_src)`
+
+Sends a PATCH request to Airtable to update a record with the chart image and metadata.
+
+### Flask Routes
+
+* `/`: Root route for health confirmation.
+* `/webhook_airtable`: Receives POST requests from Airtable and triggers the automation workflow.
+* `/cache-me`: A test endpoint for validating Nginx or proxy caching.
+* `/info`: Debug endpoint showing request metadata.
+* `/flask-health-check`: Health check route used for monitoring.
+
+## Triggering the Automation
+
+To initiate a snapshot and Airtable update:
+
+1. Send a `POST` request to `/webhook_airtable` with the required JSON payload.
+2. The bot authenticates with TradingView, captures the chart image, and updates your Airtable record.
+
+## License
+
+MIT License
+
