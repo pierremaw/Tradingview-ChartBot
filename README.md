@@ -117,7 +117,3 @@ To trigger the automation, send a POST request to `/webhook_airtable` with the f
 ```
 
 The record in Airtable will be updated with a file upload and a URL in the field named by `request_type`.
-
-## Deployment
-
-You can run the application on any VPS with Python 3.6 or newer. Docker support is recommended for production use. Ensure your Selenium Grid is also running in the environment, either locally or remotely.
