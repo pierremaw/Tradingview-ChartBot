@@ -35,7 +35,7 @@ The Flask server manages the webhook input and coordinates the entire process.
 End‑to‑end navigation of TradingView, symbol search, snapshot capture, and retrieval of both the PNG URL and the page URL via Selenium WebDriver.
 
 ### Webhook‑Driven API
-`/webhook_airtable` accepts JSON payloads—`asset`, `record_id`, `request_type`, &c.—so Airtable automations or third‑party services can request charts on demand.
+`/webhook_airtable` accepts JSON payloads—`asset`, `record_id`, `request_type`, etc.—so Airtable automations or third‑party services can request charts on demand.
 
 ### Airtable Integration
 After capturing the chart image, the bot PATCHes the target record, attaching the file and its source URL—bridging TradingView visual data into your Airtable workspace.
