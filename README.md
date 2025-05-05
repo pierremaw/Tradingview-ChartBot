@@ -60,9 +60,6 @@ CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 REMOTE_ADDRESS=http://your-selenium-grid-address    # e.g. http://localhost
 ````
 
-> **Note:** `AIRTABLE_BASE_ID` and `AIRTABLE_TABLE_NAME` were folded into the full `AIRTABLE_API_URL` for simplicity.
-> If you prefer separate vars, update `airtable_api_request()` accordingly.
-
 ## Code Overview
 
 ### `selenium_chart(asset_name)`
@@ -94,8 +91,6 @@ Core libs:
 * python‑dotenv
 * fake‑useragent
 * requests
-
-You’ll also need a Selenium Grid (or local `chromedriver`) reachable at `REMOTE_ADDRESS`.
 
 ## Example Webhook Payload
 
