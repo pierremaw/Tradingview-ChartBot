@@ -3,7 +3,8 @@
 [https://github.com/user-attachments/assets/f266d143-5bb5-4d9f-87a1-150726d078a8](https://github.com/user-attachments/assets/f266d143-5bb5-4d9f-87a1-150726d078a8)
 
 **TradingView Chart Automation** is a Python‑based micro‑service that automatically captures real‑time chart snapshots from TradingView and updates them to Airtable via webhooks.  
-Built with Selenium and Flask, it runs on a remote server, listens for asset data, and delivers TradingView snapshot images directly into structured Airtable records.
+
+Built with Python, Selenium and Flask, it runs on a remote server, listens for asset data, and delivers TradingView snapshot images directly into structured Airtable records.
 
 I created this project to explore automated financial data visualisation and sharpen my full‑stack Python skills.
 
