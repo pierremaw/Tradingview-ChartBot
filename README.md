@@ -101,7 +101,7 @@ Core libs:
   "asset": "AAPL",
   "request_type": "Daily Chart",
   "timeframe": "1D",
-  "pattern": "Breakout"
+  "pattern": "Flag"
 }
 ```
 
