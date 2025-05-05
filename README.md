@@ -15,7 +15,7 @@ This project reflects my proficiency in:
 - Handling secure credential storage with `dotenv`
 - Building a **concise single‑file micro‑service** for automation
 - Integrating with external APIs (in this case, Airtable)
-- Optionally containerising and running code on a VPS with Docker + env‑vars
+- Containerising and running code on a VPS with Docker + env‑vars
 
 ## How It Works
 
