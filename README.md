@@ -8,7 +8,7 @@ Built with Python, Selenium and Flask, it runs on a remote server, listens for a
 
 I created this project to explore automated financial data visualisation and sharpen my full‑stack Python skills.
 
-This project reflects my proficiency in:
+This project enabled me to develop proficiency in:
 
 - Using Selenium to control browser behaviour for authenticated sites
 - Creating and managing Flask APIs
