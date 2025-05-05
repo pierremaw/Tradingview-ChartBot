@@ -72,7 +72,7 @@ PATCHes Airtable with the provided payload.
 
 ### Flask Endpoints
 
-* `/` — root (“W!”)
+* `/` — root
 * `/webhook_airtable` — main webhook
 * `/cache-me` — Nginx cache test
 * `/info` — request metadata
