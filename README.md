@@ -1,6 +1,6 @@
 # TradingView Chart Automation
 
-https://github.com/user-attachments/assets/bfabf861-921d-431c-be35-4701620f8114
+https://github.com/user-attachments/assets/6538c9c2-16e4-433c-b9ef-e02d0ad08e13
 
 **TradingView Chart Automation** is a Python‑based micro‑service that automatically captures real‑time chart snapshots from TradingView and updates them to Airtable via webhooks.  
 
