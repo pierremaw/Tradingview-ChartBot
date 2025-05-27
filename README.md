@@ -1,98 +1,122 @@
 # TradingView Chart Automation
 
-https://github.com/user-attachments/assets/6538c9c2-16e4-433c-b9ef-e02d0ad08e13
+[https://github.com/user-attachments/assets/6538c9c2-16e4-433c-b9ef-e02d0ad08e13](https://github.com/user-attachments/assets/6538c9c2-16e4-433c-b9ef-e02d0ad08e13)
 
-**TradingView Chart Automation** is a Python‑based micro‑service that automatically captures real‑time chart snapshots from TradingView and updates them to Airtable via webhooks.  
+**TradingView Chart Automation** is a streamlined Python microservice that automates the capture of TradingView chart snapshots and delivers them directly into Airtable records via webhooks. This system leverages Flask for API handling, Selenium for browser automation, and Docker for remote deployment. Designed for real-time use, the service makes it easy to visualize and archive financial chart data in a structured and centralized workspace.
 
-Built with Python, Selenium and Flask, it runs on a remote server, listens for asset data, and delivers TradingView snapshot images directly into structured Airtable records.
+This project served as a practical deep dive into full-stack Python development. It provided hands-on experience with secure environment configuration, authenticated web automation, and API-driven workflows. The microservice is compact, single-file, and containerized for ease of deployment and maintenance on remote servers.
 
-I created this project to explore automated financial data visualisation and sharpen my full‑stack Python skills.
+## Overview
 
-This project enabled me to develop proficiency in:
+When triggered by an incoming webhook, the service performs a sequence of actions:
 
-- Using Selenium to control browser behaviour for authenticated sites
-- Creating and managing Flask APIs
-- Handling secure credential storage with `dotenv`
-- Building a **concise single‑file micro‑service** for automation
-- Integrating with external APIs (in this case, Airtable)
-- Containerising and running code on a VPS with Docker + env‑vars
+* Launches a Selenium browser session using a remote Selenium Grid (headless-compatible).
+* Authenticates with TradingView using securely stored credentials.
+* Opens a specified asset chart and captures a PNG snapshot.
+* Extracts the image and page URLs of the snapshot.
+* Sends the image and metadata to Airtable, updating the specified record.
 
-## How It Works
-
-When triggered by a webhook, the bot executes the following steps:
-
-1. Launches a browser session through Selenium Grid (headless‑ready).
-2. Logs into TradingView using secure credentials stored in the environment.
-3. Opens the chart for a specified asset and takes a snapshot.
-4. Captures the URL and image source of that snapshot.
-5. Updates an Airtable record with the image and reference link through the Airtable API.
-
-The Flask server manages the webhook input and coordinates the entire process.
+The Flask server exposes a public webhook endpoint that accepts chart generation requests and orchestrates all these steps automatically.
 
 ## Features
 
-### Automated TradingView Charting
-End‑to‑end navigation of TradingView, symbol search, snapshot capture, and retrieval of both the PNG URL and the page URL via Selenium WebDriver.
+### TradingView Chart Automation
 
-### Webhook‑Driven API
-`/webhook_airtable` accepts JSON payloads—`asset`, `record_id`, `request_type`, etc.—so Airtable automations or third‑party services can request charts on demand.
+This service automates the full lifecycle of chart capture, including symbol lookup, visual rendering, and image extraction from TradingView. It retrieves both the direct PNG file and the corresponding chart page URL using Selenium WebDriver.
+
+### Webhook-Based API
+
+The `/webhook_airtable` endpoint listens for JSON payloads containing fields such as `asset`, `record_id`, and `request_type`. This enables seamless integration with Airtable automations or third-party systems that need on-demand chart generation.
 
 ### Airtable Integration
-After capturing the chart image, the bot PATCHes the target record, attaching the file and its source URL—bridging TradingView visual data into your Airtable workspace.
 
-### Flask Micro‑Server
-Lightweight Flask app exposes the webhook plus diagnostics (`/info`, `/flask-health-check`, `/cache-me`).
+After capturing the chart snapshot, the service PATCHes the target record in Airtable using the Airtable API. It attaches the chart image and inserts a link back to TradingView, keeping your Airtable database visually enriched and up to date.
+
+### Lightweight Flask Server
+
+The service is built on Flask and includes several endpoints for diagnostics and system health:
+
+* `/webhook_airtable`: Accepts chart generation requests.
+* `/info`: Provides request metadata for debugging.
+* `/flask-health-check`: Simple liveness probe for monitoring.
+* `/cache-me`: Used to test Nginx or browser caching layers.
+* `/`: Root endpoint.
 
 ## Environment Configuration
 
-Create a `.env` file in your project root with:
+To run the service, create a `.env` file in the project root with your credentials and configuration:
 
 ```env
 TRADING_VIEW_EMAIL=your_tradingview_email
 TRADING_VIEW_PASSWORD=your_tradingview_password
 
 AIRTABLE_API_KEY=your_airtable_api_key
-AIRTABLE_API_URL=https://api.airtable.com/v0/YOUR_BASE_ID/YOUR_TABLE_NAME   # combine base & table here
+AIRTABLE_API_URL=https://api.airtable.com/v0/YOUR_BASE_ID/YOUR_TABLE_NAME
 
 WEBHOOK_PASSPHRASE=your_webhook_passphrase
 CHART_WEBHOOK_PASSPHRASE=your_chart_webhook_passphrase
 
-REMOTE_ADDRESS=http://your-selenium-grid-address    # e.g. http://localhost
-````
+REMOTE_ADDRESS=http://your-selenium-grid-address
+```
 
-## Code Overview
+These environment variables manage authentication and connectivity. Use `dotenv` to load them securely during execution.
+
+## Core Logic
 
 ### `selenium_chart(asset_name)`
 
-Logs into TradingView, navigates to the chart for `asset_name`, takes a snapshot, and returns the page URL plus the PNG URL. Supports Selenium Grid and randomises the user‑agent.
+This function initiates a Selenium browser session, logs into TradingView, opens the chart for the specified `asset_name`, captures a snapshot, and returns both the page URL and the image URL. It supports Selenium Grid and randomizes the user agent for robustness.
 
 ### `airtable_api_request(api_url, data)`
 
-PATCHes Airtable with the provided payload.
+This function sends a PATCH request to the Airtable API, updating the designated record with the chart image and its metadata.
 
 ### Flask Endpoints
 
-* `/` — root
-* `/webhook_airtable` — main webhook
-* `/cache-me` — Nginx cache test
-* `/info` — request metadata
-* `/flask-health-check` — simple health probe
+```python
+@app.route('/')
+def root():
+    return 'Service is running.'
+
+@app.route('/webhook_airtable', methods=['POST'])
+def webhook_airtable():
+    # Main webhook logic here
+    pass
+
+@app.route('/cache-me')
+def cache_me():
+    return 'Cache test successful.'
+
+@app.route('/info')
+def info():
+    return request.headers
+
+@app.route('/flask-health-check')
+def health_check():
+    return 'OK'
+```
+
+These routes define the main entry point and diagnostic endpoints for the Flask server.
 
 ## Dependencies
+
+Install the required Python libraries using:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Core libs:
+The core dependencies include:
 
-* selenium
-* flask
-* python‑dotenv
-* fake‑useragent
-* requests
+* `selenium`: For browser automation
+* `flask`: For building the API server
+* `python-dotenv`: For loading environment variables
+* `fake-useragent`: To spoof browser fingerprints
+* `requests`: For API communication with Airtable
 
 ## Example Webhook Payload
+
+Here’s a sample JSON body for a webhook request:
 
 ```json
 {
@@ -105,4 +129,4 @@ Core libs:
 }
 ```
 
-The specified Airtable record will receive a new file attachment and a reference URL under the field named by `request_type`.
+The service will use this payload to navigate to the specified asset’s chart, take a snapshot, and update the corresponding Airtable record with the new image and chart link.
