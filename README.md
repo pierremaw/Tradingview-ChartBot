@@ -129,4 +129,4 @@ Here’s a sample JSON body for a webhook request:
 }
 ```
 
-The service will use this payload to navigate to the specified asset’s chart, take a snapshot, and update the corresponding Airtable record with the new image and chart link.
+The service references this payload to navigate to the specified asset’s chart, take a snapshot, and update the corresponding Airtable record with the new image and chart link.
