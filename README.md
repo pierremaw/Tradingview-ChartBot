@@ -1,16 +1,16 @@
 # TradingView Chart Automation
 
-[https://github.com/user-attachments/assets/6538c9c2-16e4-433c-b9ef-e02d0ad08e13](https://github.com/user-attachments/assets/6538c9c2-16e4-433c-b9ef-e02d0ad08e13)
+https://github.com/user-attachments/assets/a936cbaf-e271-4f99-ab42-da7bd570ecb0
 
-**TradingView Chart Automation** is a streamlined Python microservice that automates the capture of TradingView chart snapshots and delivers them directly into Airtable records via webhooks. This system leverages Flask for API handling, Selenium for browser automation, and Docker for remote deployment. Designed for real-time use, the service makes it easy to visualize and archive financial chart data in a structured and centralized workspace.
+**TradingView Chart Automation** is a Python-based automation that captures TradingView chart snapshots and updates Airtable records on demand via webhooks. 
 
-This project served as a practical deep dive into full-stack Python development. It provided hands-on experience with secure environment configuration, authenticated web automation, and API-driven workflows. The microservice is compact, single-file, and containerized for ease of deployment and maintenance on remote servers.
+This project served as a deep dive into full-stack Python development. It provided hands-on experience with environment configuration, authenticated web automation, and API-driven workflows. The automation runs on remote systems using Docker, Flask, and Selenium.
 
 ## Overview
 
-When triggered by an incoming webhook, the service performs a sequence of actions:
+When triggered by an incoming webhook, the automation performs a sequence of actions:
 
-* Launches a Selenium browser session using a remote Selenium Grid (headless-compatible).
+* Launches a Selenium browser session using a remote Selenium Grid.
 * Authenticates with TradingView using securely stored credentials.
 * Opens a specified asset chart and captures a PNG snapshot.
 * Extracts the image and page URLs of the snapshot.
@@ -129,4 +129,4 @@ Here’s a sample JSON body for a webhook request:
 }
 ```
 
-The service references this payload to navigate to the specified asset’s chart, take a snapshot, and update the corresponding Airtable record with the new image and chart link.
+The automation references this payload to navigate to the specified asset’s chart, take a snapshot, and update the corresponding Airtable record with the new image and chart link.
